@@ -20,6 +20,10 @@ The scenarios teach players to recognize malicious AI extensions, compromised so
 
 The main lesson is simple: **an AI agent should only access what it needs, follow trusted instructions, and ask a human before making risky decisions.**
 
+## Learning guide
+
+See [SCENARIO_GUIDE.md](SCENARIO_GUIDE.md) for a plain-language explanation of every challenge, its correct decision, OWASP category, and security lesson.
+
 ## Run locally
 
 From this folder:
@@ -129,3 +133,4 @@ This is an educational simulation, not a security scanner or enforcement engine.
 - `index.html` — game UI
 - `styles.css` — styling and animations
 - `app.js` — missions, timer, scoring, and local leaderboard
+- `SCENARIO_GUIDE.md` — plain-language challenge explanations and answers
