@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Agent Security Strike — a timed OWASP Agentic Skills Top 10 security challenge." />
+  <title>Agent Security Strike</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="noise"></div>
+  <div id="reactionLayer" class="reaction-layer" aria-live="polite" aria-atomic="true"></div>
+  <audio id="backgroundMusic" src="typography-infraction-main-version-16210-01-43.mp3" preload="auto" loop></audio>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">AP</div>
+      <div>
+        <div class="eyebrow">OWASP AGENTIC SECURITY GAME</div>
+        <h1>Agent Security Strike</h1>
+      </div>
+    </div>
+    <div class="top-stats">
+      <div><span>LEVEL</span><strong id="levelStat">1/8</strong></div>
+      <div><span>SCORE</span><strong id="scoreStat">0</strong></div>
+      <div><span>STREAK</span><strong id="streakStat">0</strong></div>
+      <div><span>TIME</span><strong id="timerStat">--</strong></div>
+    </div>
+    <button id="musicToggle" class="music-toggle" type="button" aria-label="Toggle game music" aria-pressed="false"><span>♫</span> MUSIC OFF</button>
+  </header>
+
+  <main>
+    <section id="introScreen" class="screen active">
+      <div class="hero">
+        <div class="hero-copy">
+          <div class="pill">OWASP AGENTIC SKILLS TOP 10</div>
+          <h2>Can you secure the agentic skill chain?</h2>
+          <p>
+            Race through a randomized set of real-world scenarios inspired by OWASP's Agentic Skills Top 10.
+            Stop malicious skills, unsafe dependencies, prompt injection, excessive access,
+            and weak isolation before time runs down.
+          </p>
+          <div class="concept-grid">
+            <div class="concept-card"><span>01</span><b>Identity</b><p>Who is the agent?</p></div>
+            <div class="concept-card"><span>02</span><b>Delegation</b><p>Who gave it authority?</p></div>
+            <div class="concept-card"><span>03</span><b>Scope</b><p>What may it do?</p></div>
+            <div class="concept-card"><span>04</span><b>Constraints</b><p>When and under what conditions?</p></div>
+          </div>
+          <div class="player-entry">
+            <label for="handleInput">PLAYER HANDLE</label>
+            <input id="handleInput" maxlength="16" autocomplete="nickname" placeholder="e.g. CYBERFOX" />
+            <small id="handleError"></small>
+          </div>
+          <button id="startBtn" class="primary">START TIMED CHALLENGE <span>→</span></button>
+        </div>
+        <div class="terminal-card">
+          <div class="terminal-head"><span></span><span></span><span></span><b>checkpoint.log</b></div>
+          <pre id="introTerminal">agent.did      = did:example:demo-agent
+delegated_by   = user:pixel_panda
+scope          = ["email:read"]
+request        = email.send(...)
+
+CHECKPOINT:
+scope required = "email:send"
+scope present  = false
+
+<span class="deny">→ ACTION BLOCKED</span></pre>
+        </div>
+      </div>
+      <p class="disclaimer">Educational prototype. Policy checks are simulated locally. Advanced missions reference the <a href="https://owasp.org/www-project-agentic-skills-top-10/" target="_blank" rel="noopener">OWASP Agentic Skills Top 10</a>.</p>
+    </section>
+
+    <section id="gameScreen" class="screen">
+      <div class="progress"><div id="progressBar"></div></div>
+
+      <div class="mission-row">
+        <div>
+          <div class="eyebrow" id="missionLabel">MISSION 01</div>
+          <h2 id="missionTitle"></h2>
+          <p id="missionBrief"></p>
+        </div>
+        <div class="risk-badge" id="riskBadge">LOW RISK</div>
+      </div>
+
+      <div class="score-ribbon" aria-label="Current points">
+        <span>10 PTS / SECOND</span>
+        <strong><span id="gameScore">0</span> PTS</strong>
+        <div class="score-meter"><div id="scoreMeter"></div></div>
+      </div>
+
+      <div class="game-grid">
+        <aside class="identity-panel panel">
+          <div class="panel-title">AGENT IDENTITY</div>
+          <div class="avatar" id="agentAvatar">A</div>
+          <h3 id="agentName"></h3>
+          <code id="agentDid"></code>
+
+          <div class="meta-list">
+            <div><span>Principal</span><b id="principal"></b></div>
+            <div><span>Delegation</span><b id="delegationStatus"></b></div>
+            <div><span>Expires</span><b id="expires"></b></div>
+          </div>
+
+          <div class="subhead">GRANTED SCOPES</div>
+          <div id="scopes" class="scope-list"></div>
+
+          <div id="constraintWrap">
+            <div class="subhead">CONSTRAINTS</div>
+            <div id="constraints" class="constraint-list"></div>
+          </div>
+        </aside>
+
+        <section class="request-panel panel">
+          <div class="panel-title">TOOL REQUEST</div>
+          <div class="tool-call">
+            <div class="tool-head">
+              <span id="toolName"></span>
+              <span class="live-dot">REQUEST</span>
+            </div>
+            <pre id="toolPayload"></pre>
+          </div>
+
+          <div class="question">What should the checkpoint do?</div>
+          <div class="actions">
+            <button class="decision allow" data-decision="allow"><span>✓</span> ALLOW</button>
+            <button class="decision challenge" data-decision="challenge"><span>?</span> ASK FOR CONSENT</button>
+            <button class="decision block" data-decision="block"><span>×</span> BLOCK</button>
+          </div>
+
+          <div id="feedback" class="feedback hidden">
+            <div class="feedback-top">
+              <strong id="feedbackTitle"></strong>
+              <span id="pointsEarned"></span>
+            </div>
+            <p id="feedbackText"></p>
+            <div class="policy-check">
+              <span>POLICY REASON</span>
+              <code id="policyReason"></code>
+            </div>
+            <button id="nextBtn" class="primary small">NEXT MISSION <span>→</span></button>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="simulationScreen" class="screen">
+      <div class="mission-row">
+        <div>
+          <div class="eyebrow">FINAL MISSION</div>
+          <h2>Inbox Agent: Live Delegation Simulation</h2>
+          <p>The user says: “Clean up my inbox, but do not delete or send anything.” Watch the agent attempt the workflow.</p>
+        </div>
+        <div class="risk-badge high">LIVE SIM</div>
+      </div>
+
+      <div class="sim-grid">
+        <div class="panel">
+          <div class="panel-title">DELEGATION</div>
+          <div class="delegation-owner">
+            <div class="avatar small-avatar">I</div>
+            <div><b>InboxHelper.ai</b><code>did:example:inbox-helper</code></div>
+          </div>
+          <div class="subhead">AUTHORIZED</div>
+          <div class="scope-list">
+            <span class="scope yes">✓ email:list</span>
+            <span class="scope yes">✓ email:read</span>
+            <span class="scope yes">✓ email:label</span>
+            <span class="scope no">× email:delete</span>
+            <span class="scope no">× email:send</span>
+          </div>
+          <button id="runSimBtn" class="primary">RUN AGENT <span>▶</span></button>
+        </div>
+
+        <div class="panel sim-console">
+          <div class="panel-title">CHECKPOINT EVENT STREAM</div>
+          <div id="eventStream" class="event-stream">
+            <div class="empty-state">Press <b>RUN AGENT</b> to start the simulation.</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="simLesson" class="lesson hidden">
+        <div class="lesson-icon">!</div>
+        <div>
+          <div class="eyebrow">WHY THIS MATTERS</div>
+          <h3>Authentication is not authorization.</h3>
+          <p>
+            The agent can be real, authenticated, and acting for the correct user while still requesting
+            an action outside its delegation. Identity answers <b>who</b>. Delegation and scopes answer
+            <b>what it is allowed to do</b>.
+          </p>
+          <button id="finishBtn" class="primary small">VIEW RESULTS <span>→</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="resultScreen" class="screen">
+      <div class="result-card">
+        <div class="eyebrow">CHALLENGE COMPLETE</div>
+        <div id="gradeRing" class="grade-ring"><span id="grade">A</span></div>
+        <h2 id="resultHeadline"></h2>
+        <p id="resultCopy"></p>
+
+        <div class="result-stats">
+          <div><strong id="finalScore"></strong><span>POINTS</span></div>
+          <div><strong id="correctCount"></strong><span>CORRECT</span></div>
+          <div><strong id="bestStreak"></strong><span>BEST STREAK</span></div>
+          <div><strong id="finalTime"></strong><span>TIME</span></div>
+        </div>
+
+        <div class="leaderboard">
+          <div class="leaderboard-head"><div><div class="eyebrow">LOCAL RANKINGS · LAST 24 HOURS</div><h3>Security Leaderboard</h3></div><span>TOP 5</span></div>
+          <div id="leaderboardList" class="leaderboard-list"></div>
+        </div>
+
+        <div class="takeaway">
+          <div class="eyebrow">CORE TAKEAWAY</div>
+          <p><b>“Knowing who the agent is isn’t enough. You also need to know what it is allowed to do.”</b></p>
+        </div>
+
+        <div class="result-actions">
+          <button id="restartBtn" class="primary">PLAY AGAIN <span>↻</span></button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>Agent Security Strike</span>
+    <span>Timed educational prototype • Based on OWASP Agentic Skills Top 10 concepts</span>
+    <span>Music: <a href="https://uppbeat.io/t/infraction/typography" target="_blank" rel="noopener">Typography by Infraction</a> • Uppbeat license FZUFFQUJLKGZQUEH</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
