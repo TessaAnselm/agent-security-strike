@@ -4,7 +4,7 @@ A dependency-free, timed browser game inspired by the [OWASP Agentic Skills Top 
 
 ## What is this game?
 
-This is a timed cybersecurity game about AI agents, written to be approachable for teenage players.
+This is a timed cybersecurity game about AI agents.
 
 An AI agent is a program that can perform tasks for someone, such as reading emails, searching documents, installing tools, or updating files. The danger is that an agent might be tricked into doing something unsafe or try to do something it was never allowed to do.
 
@@ -61,6 +61,39 @@ Replace the example repository URL with the URL GitHub provides. Do not commit a
 5. Deploy the site.
 
 Later pushes to `main` will trigger new Netlify deploys automatically. The current leaderboard remains local to each player's browser; a trusted shared competition leaderboard requires server-side scoring and storage.
+
+## Deployment and competition security
+
+This game can be deployed to Netlify as a static site using the included `netlify.toml`. That setup is suitable for demonstrations, classrooms, workshops, and casual competitions where the results do not need to be tamper-resistant.
+
+### Critical competition concerns
+
+The current game runs entirely in the browser and therefore has important trust limitations:
+
+- Answers are visible in `app.js`.
+- Players can change `score`, `timeLeft`, and `streak` using browser developer tools.
+- The timer runs entirely in the browser and can be paused or modified.
+- `localStorage` leaderboard entries can be edited manually.
+- Every browser has a separate leaderboard, so there is no authoritative shared ranking.
+- Player handles do not prove identity; competitors can reuse another player's name.
+- Refreshing the page or opening multiple tabs allows unlimited attempts.
+- Question shuffling uses `Math.random()`, which is appropriate for casual play but is not secure randomness.
+
+These limitations are not vulnerabilities that expose a server or user account because the current project has no backend, authentication system, or sensitive data. They are competition-integrity risks: players can manipulate locally calculated results.
+
+OWASP recommends treating security-relevant client values as untrusted and recalculating them on a trusted server. Browser storage must not be treated as an authorization mechanism or authoritative state. See the [OWASP Business Logic Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Business_Logic_Security_Cheat_Sheet.html) and [OWASP HTML5 Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html).
+
+For a prize-based, public, or remote competition, use a backend to:
+
+- Keep correct answers out of the browser bundle.
+- Record question start and submission times server-side.
+- Calculate scores and streaks server-side.
+- Accept each question response only once.
+- Authenticate players or issue unique competition codes.
+- Limit attempts and apply rate limiting.
+- Store one shared, authoritative leaderboard.
+
+Netlify can continue hosting the frontend. A secure competition version could add Netlify Functions for server-side validation and a persistent database or managed storage service for the leaderboard.
 
 ## Gameplay
 
