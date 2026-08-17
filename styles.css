@@ -65,6 +65,11 @@ button { font: inherit; }
 .top-stats strong { font:800 18px ui-monospace,monospace; }
 .top-stats strong.timer-low { color:var(--danger);animation:timerPulse .7s ease infinite alternate; }
 @keyframes timerPulse { to { text-shadow:0 0 16px var(--danger);transform:scale(1.08); } }
+.top-stats .practice-badge { display:none;align-items:center;border:1px solid rgba(54,229,255,.4);color:var(--cyan);background:rgba(54,229,255,.05);padding:0 12px;font:800 9px ui-monospace,monospace;letter-spacing:1.2px; }
+.top-stats.practice-mode .timed-stat { display:none; }
+.top-stats.practice-mode .practice-badge { display:flex; }
+.practice-ribbon { margin:-30px 0 18px;color:var(--cyan);font:700 11px ui-monospace,monospace;letter-spacing:.4px;text-align:right; }
+.result-card.practice-mode .timed-stat { display:none; }
 .music-toggle { border:1px solid var(--line);background:#0b0f14;color:#75808e;padding:9px 11px;cursor:pointer;font:800 9px ui-monospace,monospace;letter-spacing:1px;transition:.2s;white-space:nowrap; }
 .music-toggle span { display:inline-block;margin-right:5px;font-size:13px; }
 .music-toggle:hover { color:#dbe3ec;border-color:#536071; }
@@ -84,11 +89,29 @@ main { width:min(1180px, calc(100% - 40px)); margin:0 auto; min-height:calc(100v
 }
 .hero h2 { font-size:clamp(42px,5vw,70px);line-height:.98;letter-spacing:-3.2px;margin:22px 0;max-width:780px; }
 .hero-copy>p { max-width:670px;font-size:18px;line-height:1.65;color:#bbc3ce; }
+.concept-lead { color:var(--muted);font:700 11px ui-monospace,monospace;letter-spacing:.4px;margin:22px 0 -10px; }
 .concept-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:30px 0;max-width:620px; }
-.concept-card { padding:14px;border:1px solid var(--line);background:rgba(16,20,27,.6);display:grid;grid-template-columns:28px auto; }
-.concept-card>span { color:var(--muted);font:700 10px ui-monospace,monospace; }
+.concept-card { padding:14px;border:1px solid var(--line);background:rgba(16,20,27,.6);display:grid;grid-template-columns:34px auto;align-items:start; }
+.concept-card:last-child { grid-column:1 / -1; }
 .concept-card b { font-size:13px; }
 .concept-card p { grid-column:2;margin:3px 0 0;color:var(--muted);font-size:12px; }
+
+.step-num {
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:24px;height:24px;padding:0 4px;
+  background:var(--accent);color:#0a0d10;
+  font:900 13px ui-monospace,monospace;
+  border-radius:4px;
+  box-shadow:0 0 0 1px rgba(184,255,44,.35),0 0 14px rgba(184,255,44,.45);
+}
+.concept-card .step-num { margin:1px 8px 0 0; }
+.panel-title .step-num,
+.subhead .step-num {
+  margin-right:9px;
+  vertical-align:2px;
+}
+.panel-title { display:flex;align-items:center; }
+.subhead { display:flex;align-items:center; }
 .primary {
   border:1px solid var(--accent);background:var(--accent);color:#111;
   padding:14px 18px;font-weight:900;font-size:12px;letter-spacing:.6px;cursor:pointer;
@@ -97,6 +120,14 @@ main { width:min(1180px, calc(100% - 40px)); margin:0 auto; min-height:calc(100v
 .primary:hover { transform:translateY(-2px);box-shadow:0 12px 40px rgba(184,255,44,.2); }
 .primary span { margin-left:14px; }
 .primary.small { padding:11px 14px; }
+.secondary {
+  border:1px solid rgba(54,229,255,.5);background:rgba(54,229,255,.05);color:var(--cyan);
+  padding:14px 18px;font-weight:900;font-size:12px;letter-spacing:.6px;cursor:pointer;transition:.2s ease;
+}
+.secondary:hover { transform:translateY(-2px);border-color:var(--cyan);box-shadow:0 12px 40px rgba(54,229,255,.15); }
+.secondary span { margin-left:14px; }
+.cta-row { display:flex;flex-wrap:wrap;gap:12px;margin-top:4px; }
+.mode-note { max-width:400px;color:#7a8492;font-size:11px;line-height:1.55;margin:12px 0 0; }
 .player-entry { display:grid;gap:7px;max-width:360px;margin:24px 0 12px; }
 .player-entry label { color:var(--accent);font:800 9px ui-monospace,monospace;letter-spacing:1.4px; }
 .player-entry input { width:100%;border:1px solid #394351;background:#090d12;color:#fff;padding:13px 14px;outline:none;font:800 14px ui-monospace,monospace;letter-spacing:1.5px;text-transform:uppercase;transition:.2s; }

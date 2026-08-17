@@ -430,7 +430,9 @@ let musicOn = false;
 let sfxContext = null;
 let advanceTimer = null;
 let advancing = false;
+let isPracticeMode = false;
 const LEADERBOARD_TTL_MS = 24 * 60 * 60 * 1000;
+const PRACTICE_MISSION_COUNT = 3;
 
 const $ = (id) => document.getElementById(id);
 const screens = ["introScreen","gameScreen","simulationScreen","resultScreen"];
@@ -522,6 +524,10 @@ function updateStats() {
 
 function startMissionTimer() {
   clearInterval(timerId);
+  if (isPracticeMode) {
+    timeLeft = 0;
+    return;
+  }
   timeLeft = 30;
   $("timerStat").textContent = `${timeLeft}s`;
   $("timerStat").classList.remove("timer-low");
@@ -597,11 +603,12 @@ function saveAndRenderLeaderboard() {
   });
 }
 
-function showReaction(isCorrect, points) {
+function showReaction(isCorrect, points, practice = false) {
   const layer = $("reactionLayer");
   const reaction = document.createElement("div");
   reaction.className = `reaction ${isCorrect ? "reaction-good" : "reaction-bad"}`;
-  reaction.innerHTML = `<div class="reaction-orb">${isCorrect ? "✓" : "×"}</div><strong>${isCorrect ? "ACCESS DECISION: RIGHT" : "PERMISSION STRIKE"}</strong><span>${isCorrect ? `+${points} POINTS` : "0 POINTS"}</span>`;
+  const label = practice ? (isCorrect ? "NICE CATCH" : "KEEP LEARNING") : (isCorrect ? `+${points} POINTS` : "0 POINTS");
+  reaction.innerHTML = `<div class="reaction-orb">${isCorrect ? "✓" : "×"}</div><strong>${isCorrect ? "ACCESS DECISION: RIGHT" : "PERMISSION STRIKE"}</strong><span>${label}</span>`;
   layer.replaceChildren(reaction);
   document.body.classList.remove("flash-good", "flash-bad");
   void document.body.offsetWidth;
@@ -617,7 +624,7 @@ function renderMission() {
   answered = false;
   const m = activeMissions[current];
   $("progressBar").style.width = `${(current / activeMissions.length) * 100}%`;
-  $("missionLabel").textContent = `MISSION ${String(current+1).padStart(2,"0")}${m.owasp ? `  •  OWASP ${m.owasp}` : ""}`;
+  $("missionLabel").textContent = `${isPracticeMode ? "STUDY" : "MISSION"} ${String(current+1).padStart(2,"0")}${m.owasp ? `  •  OWASP ${m.owasp}` : ""}`;
   $("missionTitle").textContent = m.title;
   $("missionBrief").textContent = m.brief;
   $("riskBadge").textContent = m.risk;
@@ -655,34 +662,62 @@ document.querySelectorAll(".decision").forEach(btn => {
     btn.classList.add("selected");
 
     if (isCorrect) {
-      const speedPoints = timeLeft * 10;
-      const streakBonus = streak * 15;
-      const earned = speedPoints + streakBonus;
-      score += earned;
-      streak += 1;
-      bestStreak = Math.max(bestStreak, streak);
       correct += 1;
-      $("feedbackTitle").textContent = "CORRECT DECISION";
-      $("pointsEarned").textContent = `+${earned} · ${speedPoints} SPEED + ${streakBonus} STREAK`;
+      let earned = 0;
+      if (isPracticeMode) {
+        $("feedbackTitle").textContent = "CORRECT DECISION";
+        $("pointsEarned").textContent = "NICE CATCH";
+      } else {
+        const speedPoints = timeLeft * 10;
+        const streakBonus = streak * 15;
+        earned = speedPoints + streakBonus;
+        score += earned;
+        streak += 1;
+        bestStreak = Math.max(bestStreak, streak);
+        $("feedbackTitle").textContent = "CORRECT DECISION";
+        $("pointsEarned").textContent = `+${earned} · ${speedPoints} SPEED + ${streakBonus} STREAK`;
+      }
       $("feedback").className = "feedback correct";
       playCorrectSound();
-      showReaction(true, earned);
+      showReaction(true, earned, isPracticeMode);
     } else {
       streak = 0;
       $("feedbackTitle").textContent = `NOT QUITE — ${m.answer.toUpperCase()} WAS THE RIGHT CALL`;
-      $("pointsEarned").textContent = "+0";
+      $("pointsEarned").textContent = isPracticeMode ? "STUDY THE REASON BELOW" : "+0";
       $("feedback").className = "feedback incorrect";
       document.querySelector(`[data-decision="${m.answer}"]`).classList.add("correct-answer");
       playWrongSound();
-      showReaction(false, 0);
+      showReaction(false, 0, isPracticeMode);
     }
     $("feedbackText").textContent = m.explanation;
     $("policyReason").textContent = m.policy;
     updateStats();
-    $("nextBtn").innerHTML = `NEXT NOW <span>→</span>`;
-    advanceTimer = setTimeout(advanceMission, isCorrect ? 1450 : 1750);
+    $("nextBtn").innerHTML = `NEXT ${isPracticeMode ? "MISSION" : "NOW"} <span>→</span>`;
+    advanceTimer = setTimeout(advanceMission, isPracticeMode ? 2000 : (isCorrect ? 1450 : 1750));
   });
 });
+
+function enterGameMode(practice) {
+  isPracticeMode = practice;
+  $("topStats").classList.toggle("practice-mode", practice);
+  $("scoreRibbon").classList.toggle("hidden", practice);
+  $("practiceRibbon").classList.toggle("hidden", !practice);
+  current = 0; score = 0; streak = 0; bestStreak = 0; correct = 0;
+  if (practice) {
+    activeMissions = [...missions];
+    for (let i = activeMissions.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [activeMissions[i], activeMissions[j]] = [activeMissions[j], activeMissions[i]];
+    }
+    activeMissions = activeMissions.slice(0, PRACTICE_MISSION_COUNT);
+  } else {
+    shuffleMissions();
+  }
+  gameStartedAt = Date.now();
+  if (!musicOn) void setMusic(true);
+  showScreen("gameScreen");
+  renderMission();
+}
 
 $("startBtn").addEventListener("click", () => {
   const handle = $("handleInput").value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "");
@@ -694,12 +729,14 @@ $("startBtn").addEventListener("click", () => {
   playerHandle = handle;
   $("handleInput").value = handle;
   $("handleError").textContent = "";
-  current = 0; score = 0; streak = 0; bestStreak = 0; correct = 0;
-  shuffleMissions();
-  gameStartedAt = Date.now();
-  if (!musicOn) void setMusic(true);
-  showScreen("gameScreen");
-  renderMission();
+  enterGameMode(false);
+});
+
+$("practiceBtn").addEventListener("click", () => {
+  const handle = $("handleInput").value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+  playerHandle = handle.length >= 2 ? handle : "PRACTICE";
+  $("handleError").textContent = "";
+  enterGameMode(true);
 });
 
 $("musicToggle").addEventListener("click", () => void setMusic(!musicOn));
@@ -752,7 +789,11 @@ $("runSimBtn").addEventListener("click", async () => {
 $("finishBtn").addEventListener("click", () => {
   const pct = correct / activeMissions.length;
   let grade, headline, copy;
-  if (pct === 1) {
+  if (isPracticeMode) {
+    grade = "✓";
+    headline = "Practice run complete.";
+    copy = `You reviewed ${correct}/${activeMissions.length} checkpoints correctly. Replay in Practice & Learn any time, or try the Timed Challenge to put your instincts to the test.`;
+  } else if (pct === 1) {
     grade = "A+";
     headline = "Agentic security champion.";
     copy = "You caught authorization failures and OWASP agentic skill risks across the full chain. Your speed bonus helped secure your leaderboard position.";
@@ -770,13 +811,19 @@ $("finishBtn").addEventListener("click", () => {
     copy = "Try again and watch for malicious packages, compromised dependencies, excessive permissions, untrusted instructions, and weak isolation.";
   }
   $("grade").textContent = grade;
+  $("resultEyebrow").textContent = isPracticeMode ? "PRACTICE COMPLETE" : "CHALLENGE COMPLETE";
   $("resultHeadline").textContent = headline;
   $("resultCopy").textContent = copy;
   $("finalScore").textContent = score;
   $("correctCount").textContent = `${correct}/${activeMissions.length}`;
   $("bestStreak").textContent = bestStreak;
   $("finalTime").textContent = formatTime(completionSeconds);
-  saveAndRenderLeaderboard();
+  $("resultCard").classList.toggle("practice-mode", isPracticeMode);
+  if (isPracticeMode) {
+    $("leaderboardList").replaceChildren();
+  } else {
+    saveAndRenderLeaderboard();
+  }
   showScreen("resultScreen");
 });
 
@@ -784,6 +831,8 @@ $("restartBtn").addEventListener("click", () => {
   clearInterval(timerId);
   clearTimeout(advanceTimer);
   current = 0; score = 0; streak = 0; bestStreak = 0; correct = 0;
+  isPracticeMode = false;
+  $("topStats").classList.remove("practice-mode");
   $("timerStat").textContent = "--";
   updateStats();
   showScreen("introScreen");

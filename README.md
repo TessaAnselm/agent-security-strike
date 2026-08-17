@@ -29,7 +29,7 @@ See [SCENARIO_GUIDE.md](SCENARIO_GUIDE.md) for a plain-language explanation of e
 From this folder:
 
 ```bash
-python3 -m http.server 8000
+4242
 ```
 
 Then open `http://localhost:8000`. No install, API key, backend, or database is required. The soundtrack starts after the player begins the challenge and can be muted from the header.
@@ -134,3 +134,4 @@ This is an educational simulation, not a security scanner or enforcement engine.
 - `styles.css` — styling and animations
 - `app.js` — missions, timer, scoring, and local leaderboard
 - `SCENARIO_GUIDE.md` — plain-language challenge explanations and answers
+- `CHANGELOG.md` — history of changes to the game
