@@ -186,6 +186,96 @@ A document-summary skill has a verified publisher, a valid signature, limited pe
 
 **Lesson:** When identity, permissions, isolation, and testing are all correct, the agent should be allowed to perform its task.
 
+## 21. A verified formatter, done right
+
+**OWASP category:** AST01 — Malicious Skills
+
+A document-formatting skill wants to install. Its publisher is verified and its signature matches the published hash.
+
+**Correct decision:** Allow
+
+**Lesson:** A verified publisher and a matching signature are exactly what a trustworthy skill install should look like. Security controls exist to let this through, not just to block the bad cases.
+
+## 22. An update that keeps its promise
+
+**OWASP category:** AST02 — Supply Chain Compromise
+
+A trusted research skill proposes an update. The new version and its dependency both resolve to an exact, pre-approved hash.
+
+**Correct decision:** Allow
+
+**Lesson:** Pinned, verifiable updates preserve the chain of trust. Not every update is a supply-chain risk — only the ones that break provenance.
+
+## 23. Asking for exactly what it needs
+
+**OWASP category:** AST03 — Over-Privileged Skills
+
+A weather skill requests only location access and its own API endpoint, matching its stated purpose exactly.
+
+**Correct decision:** Allow
+
+**Lesson:** Least privilege isn't just about rejecting excess — it's about recognizing when a request already matches what a feature actually needs.
+
+## 24. A manifest that loads the safe way
+
+**OWASP category:** AST04 — Insecure Metadata
+
+A skill's configuration file contains no custom tags and passes schema validation using a safe parser.
+
+**Correct decision:** Allow
+
+**Lesson:** Metadata that stays inert data — never code — is safe to load.
+
+## 25. A page that asks nicely
+
+**OWASP category:** AST05 — Untrusted External Instructions
+
+A support agent reads a customer's page. The page's text asks it to open a refund ticket — something the agent is normally allowed to do, just not something the human asked for in this conversation.
+
+**Correct decision:** Ask for consent
+
+**Lesson:** Not every instruction hidden in fetched content is trying to steal secrets. When the requested action is in-scope but its origin is untrusted, the safe move is to confirm with a human rather than silently act or reflexively block.
+
+## 26. Staying inside the box
+
+**OWASP category:** AST06 — Weak Isolation
+
+A code-review agent finishes its work entirely inside its sandbox, never requesting host access or network egress.
+
+**Correct decision:** Allow
+
+**Lesson:** Isolation that holds up under real use — not just in theory — is what should be rewarded.
+
+## 27. A documented exception, pending sign-off
+
+**OWASP category:** AST07 — Update Drift
+
+A production agent runs one version behind the minimum secure release, but the team has already filed an exception with compensating controls, awaiting security review.
+
+**Correct decision:** Ask for consent
+
+**Lesson:** A filed exception with compensating controls is different from silently ignoring a known vulnerability — but it still needs a human's sign-off before the vulnerable version keeps running.
+
+## 28. An agent that's on the books
+
+**OWASP category:** AST09 — No Governance
+
+A finance agent has a registered owner, an approval ticket, and audit logging enabled before requesting production access.
+
+**Correct decision:** Allow
+
+**Lesson:** Governance isn't red tape for its own sake — once ownership, approval, and audit logging are actually in place, the agent should be allowed to operate.
+
+## 29. A clean port
+
+**OWASP category:** AST10 — Cross-Platform Reuse
+
+A skill is migrated to a new agent platform. The conversion preserves every deny rule and its original risk tier.
+
+**Correct decision:** Allow
+
+**Lesson:** Porting software between platforms isn't inherently risky — the risk is losing security metadata in the process. A conversion that preserves it can be trusted.
+
 ## Final delegation simulation
 
 An inbox agent may list, read, and label email. It is not allowed to delete or send messages. The simulation shows its approved actions succeeding and its unauthorized delete request being blocked.

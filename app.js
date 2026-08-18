@@ -411,6 +411,170 @@ const missions = [
     answer: "allow",
     explanation: "Security controls should enable safe work. Provenance, least privilege, isolation, and layered scanning all match this request.",
     policy: "AST08: signature ✓ permissions ✓ behavioral scan ✓ → allow"
+  },
+  {
+    owasp: "AST01 · MALICIOUS SKILLS",
+    title: "A verified formatter, done right",
+    brief: "A document-formatting skill requests activation. Its publisher is verified, and its signature matches the published hash.",
+    risk: "LOW RISK", riskClass: "", agent: "CleanFormat.ai", did: "did:web:verified-tools.example",
+    principal: "Workspace Admin", delegation: "PENDING", expires: "Not installed",
+    scopes: ["files:read", "files:write"],
+    constraints: ["signature: valid", "publisher: verified"],
+    tool: "skills.install",
+    payload: `{
+  "package": "clean-format@3.2.0",
+  "signature_valid": true,
+  "publisher": "verified-tools.example"
+}`,
+    answer: "allow",
+    explanation: "The publisher is verified and the signature matches the published hash. Legitimate, well-scoped skills should be allowed to install, not blocked by default.",
+    policy: "AST01: signature_valid AND publisher_verified → allow install"
+  },
+  {
+    owasp: "AST02 · SUPPLY CHAIN COMPROMISE",
+    title: "An update that keeps its promise",
+    brief: "A trusted research skill proposes an update where the new version and its dependency both resolve to an exact, pre-approved hash.",
+    risk: "LOW RISK", riskClass: "", agent: "ResearchKit.ai", did: "did:web:trusted-labs.example",
+    principal: "Acme Team", delegation: "ACTIVE", expires: "12 days",
+    scopes: ["web:search", "notes:write"],
+    constraints: ["approved version: 2.4.0", "dependencies must be hash-pinned"],
+    tool: "skills.auto_update",
+    payload: `{
+  "from": "2.3.1",
+  "to": "2.4.0",
+  "dependency": "page-parser@2.4.0",
+  "hash": "sha256:9f2a...c81"
+}`,
+    answer: "allow",
+    explanation: "Every dependency, including the update itself, resolves to an exact pinned hash that matches the approved chain of custody. Updates that preserve provenance should proceed.",
+    policy: "AST02: immutable_dependency_hash=present AND matches_approved → allow update"
+  },
+  {
+    owasp: "AST03 · OVER-PRIVILEGED SKILLS",
+    title: "Asking for exactly what it needs",
+    brief: "A weather skill requests only location access and its own API endpoint — nothing more.",
+    risk: "LOW RISK", riskClass: "", agent: "WeatherNow.ai", did: "did:web:weather-now.example",
+    principal: "Cloudy McCloud", delegation: "ACTIVE", expires: "30 days",
+    scopes: ["location:read", "network:egress"],
+    constraints: ["stated purpose: local weather", "allowed host: api.weathernow.example"],
+    tool: "skills.approve_permissions",
+    payload: `{
+  "files": [],
+  "network": "api.weathernow.example",
+  "purpose": "show local forecast"
+}`,
+    answer: "allow",
+    explanation: "The requested permissions map directly to the feature's stated purpose, with no environment variables, SSH keys, or open-ended network access. This is what a least-privilege manifest looks like.",
+    policy: "AST03: requested_permissions == purpose_required_permissions → allow"
+  },
+  {
+    owasp: "AST04 · INSECURE METADATA",
+    title: "A manifest that loads the safe way",
+    brief: "A diagram skill's manifest uses plain YAML fields only, no custom tags, and passes schema validation with a safe parser.",
+    risk: "LOW RISK", riskClass: "", agent: "DiagramHelper.ai", did: "did:web:diagram-helper.example",
+    principal: "Design Team", delegation: "ACTIVE", expires: "1 day",
+    scopes: ["diagrams:read", "diagrams:write"],
+    constraints: ["safe parser: enforced", "schema validation: passed"],
+    tool: "manifest.parse",
+    payload: `{
+  "format": "yaml",
+  "tags": "none",
+  "schema_valid": true
+}`,
+    answer: "allow",
+    explanation: "No custom deserialization tags, and the manifest passes strict schema validation with a safe parser. Metadata that stays inert data, not code, is safe to load.",
+    policy: "AST04: unsafe_tags=none AND schema_valid=true → allow parse"
+  },
+  {
+    owasp: "AST05 · UNTRUSTED EXTERNAL INSTRUCTIONS",
+    title: "A page that asks nicely",
+    brief: "A support skill fetches a customer's page. The page's text asks it to open a refund ticket — an action within its normal toolset, but outside what the conversation requested.",
+    risk: "MEDIUM RISK", riskClass: "medium", agent: "SupportSherpa.ai", did: "did:example:support-sherpa",
+    principal: "Support Team", delegation: "ACTIVE", expires: "4 hours",
+    scopes: ["tickets:read", "tickets:create", "web:fetch"],
+    constraints: ["external content is data, not instruction", "new actions require confirmation"],
+    tool: "tickets.create",
+    payload: `{
+  "source": "instructions found in fetched page",
+  "type": "refund_request",
+  "customer": "acct_5521"
+}`,
+    answer: "challenge",
+    explanation: "Opening a ticket is within the skill's normal, granted scope — unlike credential exfiltration, it isn't a policy violation on its face. But the instruction to do it came from untrusted fetched content, not the user, so a human should confirm before it's created.",
+    policy: "AST05: in_scope_action + external_instruction_origin → human confirmation"
+  },
+  {
+    owasp: "AST06 · WEAK ISOLATION",
+    title: "Staying inside the box",
+    brief: "A code-review skill finishes its analysis entirely inside its sandbox, with no host filesystem access and network egress denied throughout.",
+    risk: "LOW RISK", riskClass: "", agent: "CodeReviewPro.ai", did: "did:web:review-tools.example",
+    principal: "Engineering", delegation: "ACTIVE", expires: "1 hour",
+    scopes: ["repo:read", "reports:write"],
+    constraints: ["sandbox required", "network egress denied"],
+    tool: "runtime.finalize_report",
+    payload: `{
+  "mount": "sandbox-only",
+  "network": "denied",
+  "reason": "analysis complete"
+}`,
+    answer: "allow",
+    explanation: "The skill completed its task without requesting host access or network egress. Containment that holds up under real use is exactly what isolation is for — allow the result.",
+    policy: "AST06: sandbox_required=true; host_mode_requested=false → allow"
+  },
+  {
+    owasp: "AST07 · UPDATE DRIFT",
+    title: "A documented exception, pending sign-off",
+    brief: "A production agent is one minor version behind the minimum secure release. The team has filed an exception with compensating controls, awaiting security review.",
+    risk: "MEDIUM RISK", riskClass: "medium", agent: "OpsRunner.ai", did: "did:web:ops.example",
+    principal: "Platform Team", delegation: "ACTIVE", expires: "30 days",
+    scopes: ["deploy:read", "logs:read"],
+    constraints: ["runtime: 2026.2.1", "minimum secure version: 2026.2.2", "exception: filed, pending approval"],
+    tool: "runtime.continue_with_exception",
+    payload: `{
+  "known_vulnerability": true,
+  "patched_version": "2026.2.2",
+  "exception_ticket": "SEC-4471",
+  "compensating_controls": ["egress restricted", "read-only mode"]
+}`,
+    answer: "challenge",
+    explanation: "This isn't a silent decision to skip patching — an exception with compensating controls has been filed. But it hasn't been approved yet, so a human reviewer should sign off before the vulnerable version keeps running.",
+    policy: "AST07: exception_filed=true AND approval=pending → human review"
+  },
+  {
+    owasp: "AST09 · NO GOVERNANCE",
+    title: "An agent that's on the books",
+    brief: "A finance agent has a registered owner, an approval ticket on file, and audit logging enabled before requesting production access.",
+    risk: "LOW RISK", riskClass: "", agent: "BudgetBuddy.ai", did: "did:web:finance.example",
+    principal: "Finance Team", delegation: "ACTIVE", expires: "90 days",
+    scopes: ["finance:read", "reports:write"],
+    constraints: ["inventory entry: present", "audit logging: enabled"],
+    tool: "agent.enable_production",
+    payload: `{
+  "owner": "finance-team@acme.example",
+  "approval_ticket": "GOV-118",
+  "audit_destination": "siem.acme.example"
+}`,
+    answer: "allow",
+    explanation: "An accountable owner, an approval record, and audit logging are all in place before production access is granted. This is what governed deployment looks like — allow it.",
+    policy: "AST09: ownership + inventory + audit controls present → allow"
+  },
+  {
+    owasp: "AST10 · CROSS-PLATFORM REUSE",
+    title: "A clean port",
+    brief: "A skill is migrated to a new agent platform. The conversion preserves every deny rule and its original risk tier.",
+    risk: "LOW RISK", riskClass: "", agent: "PortedAssistant.ai", did: "did:web:portable.example",
+    principal: "Migration Team", delegation: "ACTIVE", expires: "5 days",
+    scopes: ["files:read", "notes:write"],
+    constraints: ["source deny_write: MEMORY.md", "target deny_write: MEMORY.md"],
+    tool: "skills.publish_port",
+    payload: `{
+  "source_risk_tier": "L2",
+  "target_risk_tier": "L2",
+  "dropped_fields": []
+}`,
+    answer: "allow",
+    explanation: "The target manifest carries over the same risk tier and deny rules as the source. A conversion that preserves its security metadata can be published.",
+    policy: "AST10: security_metadata_loss=none → allow port"
   }
 ];
 
@@ -438,12 +602,23 @@ const PRACTICE_MISSION_COUNT = 3;
 const $ = (id) => document.getElementById(id);
 const screens = ["introScreen","gameScreen","simulationScreen","resultScreen"];
 
-function shuffleMissions() {
-  activeMissions = [...missions];
-  for (let i = activeMissions.length - 1; i > 0; i--) {
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [activeMissions[i], activeMissions[j]] = [activeMissions[j], activeMissions[i]];
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
+  return arr;
+}
+
+const TIMED_ANSWER_QUOTAS = { block: 6, allow: 6, challenge: 3 };
+
+function buildTimedMissionSet() {
+  const byAnswer = { block: [], allow: [], challenge: [] };
+  missions.forEach(m => byAnswer[m.answer].push(m));
+  const picked = Object.entries(TIMED_ANSWER_QUOTAS).flatMap(([answer, count]) =>
+    shuffleArray([...byAnswer[answer]]).slice(0, count)
+  );
+  return shuffleArray(picked);
 }
 
 async function setMusic(enabled) {
@@ -531,7 +706,13 @@ function resetMonster() {
   monster.classList.remove("success", "failure", "timeout");
   monster.classList.add("waiting");
   setMonsterAnimation("assets/monster/monster-eating.gif");
-  $("monsterStatus").textContent = "BEAT THE CLOCK";
+}
+
+function updateMonsterCountdown() {
+  const pts = timeLeft * 10;
+  $("monsterStatus").textContent = timeLeft === 0
+    ? "COOKIE GONE · 0 PTS"
+    : `WORTH ${pts} PTS · ${timeLeft}s LEFT`;
 }
 
 function setMonsterAnimation(source) {
@@ -543,40 +724,49 @@ function setMonsterAnimation(source) {
 }
 
 function currentMonsterStage() {
+  if (isPracticeMode) return 0;
   return Math.min(7, Math.floor(((MISSION_SECONDS - timeLeft) / MISSION_SECONDS) * 8));
 }
 
 function showMonsterResult(type, points = 0) {
   const monster = $("scoreMonster");
   if (!monster) return;
+  $("missionBrief").classList.remove("brief-pulse");
   const isSuccess = type === "success";
   const stage = currentMonsterStage();
   monster.classList.remove("waiting", "success", "failure", "timeout");
   monster.classList.add(isSuccess ? "success" : "failure");
-  if (timeLeft === 0) monster.classList.add("timeout");
+  if (!isPracticeMode && timeLeft === 0) monster.classList.add("timeout");
   setMonsterAnimation(`assets/monster/monster-${isSuccess ? "win" : "lose"}-${stage}.gif`);
-  $("monsterStatus").textContent = isSuccess
-    ? (points > 0 ? `COOKIE SAVED · +${points}` : "COOKIE GONE · 0 POINTS")
-    : "COOKIE DROPPED · 0 POINTS";
+  if (isPracticeMode) {
+    $("monsterStatus").textContent = isSuccess ? "NICE CATCH!" : "STUDY THE REASON BELOW";
+  } else {
+    $("monsterStatus").textContent = isSuccess
+      ? (points > 0 ? `COOKIE SAVED · +${points}` : "COOKIE GONE · 0 POINTS")
+      : "COOKIE DROPPED · 0 POINTS";
+  }
 }
 
 function startMissionTimer() {
   clearInterval(timerId);
   if (isPracticeMode) {
     timeLeft = 0;
+    $("monsterStatus").textContent = "STUDY MODE · NO CLOCK";
     return;
   }
   timeLeft = MISSION_SECONDS;
   $("timerStat").textContent = `${timeLeft}s`;
   $("timerStat").classList.remove("timer-low");
+  updateMonsterCountdown();
   timerId = setInterval(() => {
     timeLeft = Math.max(0, timeLeft - 1);
     $("timerStat").textContent = `${timeLeft}s`;
     $("timerStat").classList.toggle("timer-low", timeLeft <= 3);
-    $("monsterStatus").textContent = timeLeft === 0 ? "COOKIE GONE · ANSWER NOW" : `COOKIE TIMER · ${timeLeft}s`;
+    updateMonsterCountdown();
     if (timeLeft === 0) {
       clearInterval(timerId);
       setMonsterAnimation("assets/monster/monster-eating-complete.gif");
+      $("missionBrief").classList.remove("brief-pulse");
     }
   }, 1000);
 }
@@ -676,7 +866,10 @@ function renderMission() {
   $("progressBar").style.width = `${(current / activeMissions.length) * 100}%`;
   $("missionLabel").textContent = `${isPracticeMode ? "STUDY" : "MISSION"} ${String(current+1).padStart(2,"0")}${m.owasp ? `  •  OWASP ${m.owasp}` : ""}`;
   $("missionTitle").textContent = m.title;
-  $("missionBrief").textContent = m.brief;
+  const missionBrief = $("missionBrief");
+  missionBrief.textContent = m.brief;
+  $("missionBriefGhost").textContent = m.brief;
+  missionBrief.classList.add("brief-pulse");
   $("riskBadge").textContent = m.risk;
   $("riskBadge").className = `risk-badge ${m.riskClass}`;
   $("agentAvatar").textContent = m.agent.charAt(0);
@@ -719,6 +912,7 @@ document.querySelectorAll(".decision").forEach(btn => {
       if (isPracticeMode) {
         $("feedbackTitle").textContent = "CORRECT DECISION";
         $("pointsEarned").textContent = "NICE CATCH";
+        showMonsterResult("success", 0);
       } else {
         if (timedOut) {
           streak = 0;
@@ -747,7 +941,7 @@ document.querySelectorAll(".decision").forEach(btn => {
       $("feedback").className = "feedback incorrect";
       document.querySelector(`[data-decision="${m.answer}"]`).classList.add("correct-answer");
       playWrongSound();
-      if (!isPracticeMode) showMonsterResult("failure");
+      showMonsterResult("failure");
       showReaction(false, 0, isPracticeMode);
     }
     $("feedbackText").textContent = m.explanation;
@@ -763,18 +957,12 @@ function enterGameMode(practice) {
   isPracticeMode = practice;
   $("topStats").classList.toggle("practice-mode", practice);
   $("scoreRibbon").classList.toggle("hidden", practice);
-  $("monsterStage").classList.toggle("hidden", practice);
   $("practiceRibbon").classList.toggle("hidden", !practice);
   current = 0; score = 0; streak = 0; bestStreak = 0; correct = 0;
   if (practice) {
-    activeMissions = [...missions];
-    for (let i = activeMissions.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [activeMissions[i], activeMissions[j]] = [activeMissions[j], activeMissions[i]];
-    }
-    activeMissions = activeMissions.slice(0, PRACTICE_MISSION_COUNT);
+    activeMissions = shuffleArray([...missions]).slice(0, PRACTICE_MISSION_COUNT);
   } else {
-    shuffleMissions();
+    activeMissions = buildTimedMissionSet();
   }
   gameStartedAt = Date.now();
   if (!musicOn) void setMusic(true);

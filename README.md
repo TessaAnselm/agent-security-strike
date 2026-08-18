@@ -14,7 +14,7 @@ For every question, the player sees what an AI agent wants to do and chooses one
 - **ASK FOR CONSENT** — a person or security reviewer should approve it first.
 - **BLOCK** — the action is dangerous or breaks a security rule.
 
-Players have 10 seconds for each question. Faster correct answers earn more points: an immediate answer can earn 100 speed points, while an answer with 5 seconds remaining earns 50. Correct answers in a row also build a streak bonus. Questions appear in a random order, and the best scores appear on a 24-hour local leaderboard.
+Players have 10 seconds for each question. Faster correct answers earn more points: an immediate answer can earn 100 speed points, while an answer with 5 seconds remaining earns 50. Correct answers in a row also build a streak bonus. Each Timed Challenge run draws 15 questions in a random order, guaranteed to include 6 ALLOW, 6 BLOCK, and 3 ASK FOR CONSENT scenarios, so no run skews too heavily toward one verdict. The best scores appear on a 24-hour local leaderboard.
 
 The scenarios teach players to recognize malicious AI extensions, compromised software updates, excessive permissions, hidden instructions, weak security sandboxes, and missing human oversight.
 
@@ -103,7 +103,7 @@ Netlify can continue hosting the frontend. A secure competition version could ad
 
 ## Gameplay
 
-Enter a player handle and play through a freshly shuffled question order on every run. Decide whether each agent action should be:
+Play through 15 randomly drawn questions (6 ALLOW, 6 BLOCK, 3 ASK FOR CONSENT) in a freshly shuffled order on every run, then enter a player handle at the end to save your score to the leaderboard. Decide whether each agent action should be:
 
 - **ALLOW** — the action satisfies its permissions and security constraints.
 - **ASK FOR CONSENT** — explicit human review or approval is required.

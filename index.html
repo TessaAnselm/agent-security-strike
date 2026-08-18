@@ -81,10 +81,13 @@ scope present  = false
       <div class="progress"><div id="progressBar"></div></div>
 
       <div class="mission-row">
-        <div>
+        <div class="mission-copy">
           <div class="eyebrow" id="missionLabel">MISSION 01</div>
           <h2 id="missionTitle"></h2>
-          <p id="missionBrief"></p>
+          <div class="brief-wrap">
+            <p class="brief-ghost" id="missionBriefGhost" aria-hidden="true"></p>
+            <p id="missionBrief"></p>
+          </div>
         </div>
         <div class="risk-badge" id="riskBadge">LOW RISK</div>
       </div>
@@ -130,16 +133,18 @@ scope present  = false
           </div>
 
           <div class="question">What should the checkpoint do?</div>
-          <div class="monster-stage" id="monsterStage" aria-hidden="true">
-            <div class="score-monster" id="scoreMonster">
-              <img id="monsterAnimation" class="monster-animation" src="assets/monster/monster-eating.gif" alt="" />
-              <span id="monsterStatus" class="monster-status">BEAT THE CLOCK</span>
+          <div class="decision-row">
+            <div class="monster-stage" id="monsterStage" aria-hidden="true">
+              <div class="score-monster" id="scoreMonster">
+                <img id="monsterAnimation" class="monster-animation" src="assets/monster/monster-eating.gif" alt="" />
+                <span id="monsterStatus" class="monster-status">BEAT THE CLOCK</span>
+              </div>
             </div>
-          </div>
-          <div class="actions">
-            <button class="decision allow" data-decision="allow"><span>✓</span> ALLOW</button>
-            <button class="decision challenge" data-decision="challenge"><span>?</span> ASK FOR CONSENT</button>
-            <button class="decision block" data-decision="block"><span>×</span> BLOCK</button>
+            <div class="actions">
+              <button class="decision allow" data-decision="allow"><span>✓</span> ALLOW</button>
+              <button class="decision challenge" data-decision="challenge"><span>?</span> ASK FOR CONSENT</button>
+              <button class="decision block" data-decision="block"><span>×</span> BLOCK</button>
+            </div>
           </div>
 
           <div id="feedback" class="feedback hidden">
