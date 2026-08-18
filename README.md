@@ -14,7 +14,7 @@ For every question, the player sees what an AI agent wants to do and chooses one
 - **ASK FOR CONSENT** — a person or security reviewer should approve it first.
 - **BLOCK** — the action is dangerous or breaks a security rule.
 
-Players have 30 seconds for each question. Faster correct answers earn more points: an answer with 30 seconds remaining earns 300 speed points, while an answer with 5 seconds remaining earns 50. Correct answers in a row also build a streak bonus. Questions appear in a random order, and the best scores appear on a 24-hour local leaderboard.
+Players have 10 seconds for each question. Faster correct answers earn more points: an immediate answer can earn 100 speed points, while an answer with 5 seconds remaining earns 50. Correct answers in a row also build a streak bonus. Questions appear in a random order, and the best scores appear on a 24-hour local leaderboard.
 
 The scenarios teach players to recognize malicious AI extensions, compromised software updates, excessive permissions, hidden instructions, weak security sandboxes, and missing human oversight.
 
@@ -37,6 +37,8 @@ Then open `http://localhost:8000`. No install, API key, backend, or database is 
 Music: “Typography” by Infraction, provided through [Uppbeat](https://uppbeat.io/t/infraction/typography), license code `FZUFFQUJLKGZQUEH`.
 
 Correct and incorrect answer effects are generated locally with the browser Web Audio API and do not require additional sound files.
+
+The opening screen includes the full-cookie eating monster GIF. Timed questions use generated GIF sequences in `assets/monster/` for the countdown and time-matched win and lose animations.
 
 ## Publish with GitHub and Netlify
 
@@ -107,7 +109,9 @@ Enter a player handle and play through a freshly shuffled question order on ever
 - **ASK FOR CONSENT** — explicit human review or approval is required.
 - **BLOCK** — the action violates delegation, provenance, scope, integrity, or runtime policy.
 
-Each mission has a 30-second clock. Correct answers earn 10 points for every second remaining, so answering immediately is worth up to 300 points. Consecutive correct answers also earn an increasing 15-point streak bonus. A correct answer after the timer reaches zero earns no speed points. The five best runs are stored in the browser's local storage and ranked by score, then completion time. Each result automatically expires 24 hours after it was recorded.
+Each mission has a 10-second clock. Correct answers earn 10 points for every second remaining, so answering immediately is worth up to 100 points. Consecutive correct answers also earn an increasing 15-point streak bonus. A correct answer after the timer reaches zero earns no speed or streak points. The five best runs are stored in the browser's local storage and ranked by score, then completion time. Each result automatically expires 24 hours after it was recorded.
+
+In timed mode, the cookie monster appears beside every question in a 10-second eating animation. When the player answers correctly, the game plays a matching win GIF based on how much cookie remained. An incorrect answer plays the matching lose GIF. Internal progress labels are hidden from players. At zero seconds the cookie is gone, and even a correct decision earns no speed or streak points. The result animation remains visible briefly before the next question; players can still choose **NEXT NOW** to skip ahead.
 
 ## OWASP coverage
 

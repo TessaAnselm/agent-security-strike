@@ -112,9 +112,9 @@ A code-review agent cannot finish its work inside its protected container. It as
 
 A new skill passed a basic scan, but it wants access to passwords, system commands, and the internet. It has not been tested for its actual behavior.
 
-**Correct decision:** Ask for consent
+**Correct decision:** Block
 
-**Lesson:** A simple automated scan is not enough for software requesting powerful access.
+**Lesson:** A simple automated scan is not enough for software requesting powerful access. Activation must remain blocked until deeper semantic and behavioral testing is complete.
 
 ## 14. A weather skill wants your secrets
 
@@ -122,9 +122,9 @@ A new skill passed a basic scan, but it wants access to passwords, system comman
 
 A weather application asks to read private configuration files and SSH keys and contact any website.
 
-**Correct decision:** Ask for consent
+**Correct decision:** Block
 
-**Lesson:** Applications should receive only the minimum permissions needed for their purpose.
+**Lesson:** Applications should receive only the minimum permissions needed for their purpose. This excessive approval request should be denied, even though the publisher may submit a safer permission manifest later.
 
 ## 15. Dangerous configuration at load time
 
@@ -168,7 +168,7 @@ A skill is moved to another AI platform. During conversion, important restrictio
 
 ## 19. Persistent memory rewrite
 
-**OWASP category:** AST01 — Malicious Skills
+**OWASP category:** AST03 — Over-Privileged Skills (cross-reference: AST01 — Malicious Skills)
 
 A note-taking skill tries to modify the agent's permanent memory so it will upload credentials in future sessions.
 
@@ -195,4 +195,3 @@ The simulation is a scripted educational demonstration. It does not connect to a
 ## Main takeaway
 
 **AI agents should receive only the access they need, treat outside instructions as untrusted, and involve a human before performing risky actions.**
-

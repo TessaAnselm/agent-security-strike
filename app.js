@@ -283,9 +283,9 @@ const missions = [
   "result": "pass",
   "requested_access": ["shell", "secrets", "network"]
 }`,
-    answer: "challenge",
-    explanation: "A basic scan result is not enough for this high-risk permission combination. Require human security review and isolated behavioral testing before activation.",
-    policy: "AST08: high_risk_permissions + behavioral_scan_missing → human review"
+    answer: "block",
+    explanation: "A basic scan result is not enough for this high-risk permission combination. Block activation until semantic review and isolated behavioral testing are complete.",
+    policy: "AST08: high_risk_permissions + behavioral_scan_missing → deny activation"
   },
   {
     owasp: "AST03 · OVER-PRIVILEGED SKILLS",
@@ -301,9 +301,9 @@ const missions = [
   "network": "*",
   "purpose": "show local forecast"
 }`,
-    answer: "challenge",
-    explanation: "The permissions are far broader than the feature requires. Send the request back for a reduced manifest limited to location and the weather API.",
-    policy: "AST03: requested_permissions exceed stated purpose → reduce and review"
+    answer: "block",
+    explanation: "The permissions are far broader than the feature requires. Block this approval request; the publisher may submit a reduced manifest limited to location and the weather API.",
+    policy: "AST03: requested_permissions exceed stated purpose → deny approval"
   },
   {
     owasp: "AST04 · INSECURE METADATA",
@@ -378,7 +378,7 @@ const missions = [
     policy: "AST10: security_metadata_loss detected → reject port"
   },
   {
-    owasp: "AST01 · MALICIOUS SKILLS",
+    owasp: "AST03 · OVER-PRIVILEGED SKILLS",
     title: "Persistent memory rewrite",
     brief: "A note-taking skill attempts to alter the agent's permanent instruction files after processing an untrusted document.",
     risk: "CRITICAL RISK", riskClass: "high", agent: "SmartNotes.ai", did: "publisher:unsigned-772...",
@@ -392,7 +392,7 @@ const missions = [
 }`,
     answer: "block",
     explanation: "The skill is attempting persistent instruction tampering. Identity and memory files require explicit protection from untrusted skill writes.",
-    policy: "AST01: persistent instruction backdoor attempt → deny and quarantine"
+    policy: "AST03: unauthorized identity-file write → deny and quarantine (cross-reference AST01)"
   },
   {
     owasp: "AST08 · VERIFIED SAFE PATH",
@@ -422,7 +422,8 @@ let bestStreak = 0;
 let correct = 0;
 let answered = false;
 let playerHandle = "ANON";
-let timeLeft = 30;
+const MISSION_SECONDS = 10;
+let timeLeft = MISSION_SECONDS;
 let timerId = null;
 let gameStartedAt = 0;
 let completionSeconds = 0;
@@ -431,7 +432,6 @@ let sfxContext = null;
 let advanceTimer = null;
 let advancing = false;
 let isPracticeMode = false;
-let monsterChompTimer = null;
 const LEADERBOARD_TTL_MS = 24 * 60 * 60 * 1000;
 const PRACTICE_MISSION_COUNT = 3;
 
@@ -519,26 +519,45 @@ function updateStats() {
   $("scoreStat").textContent = score;
   $("streakStat").textContent = streak;
   if ($("gameScore")) $("gameScore").textContent = score;
-  const maxScore = (activeMissions.length * 300) + (15 * activeMissions.length * (activeMissions.length - 1) / 2);
+  const maxScore = (activeMissions.length * MISSION_SECONDS * 10) + (15 * activeMissions.length * (activeMissions.length - 1) / 2);
   const scorePct = Math.min(1, score / maxScore);
   if ($("scoreMeter")) $("scoreMeter").style.width = `${scorePct * 100}%`;
   if ($("scoreMonster")) $("scoreMonster").style.transform = `scale(${0.8 + scorePct * 0.7})`;
 }
 
-function feedMonster(points) {
+function resetMonster() {
   const monster = $("scoreMonster");
   if (!monster) return;
-  const svg = monster.querySelector(".monster-svg");
-  const cookie = monster.querySelector(".monster-cookie");
-  $("cookiePoints").textContent = `+${points}`;
-  cookie.classList.remove("show");
-  void cookie.offsetWidth;
-  cookie.classList.add("show");
-  clearTimeout(monsterChompTimer);
-  svg.classList.remove("chomp");
-  void svg.offsetWidth;
-  svg.classList.add("chomp");
-  monsterChompTimer = setTimeout(() => svg.classList.remove("chomp"), 480);
+  monster.classList.remove("success", "failure", "timeout");
+  monster.classList.add("waiting");
+  setMonsterAnimation("assets/monster/monster-eating.gif");
+  $("monsterStatus").textContent = "BEAT THE CLOCK";
+}
+
+function setMonsterAnimation(source) {
+  const animation = $("monsterAnimation");
+  if (!animation) return;
+  animation.removeAttribute("src");
+  void animation.offsetWidth;
+  animation.src = source;
+}
+
+function currentMonsterStage() {
+  return Math.min(7, Math.floor(((MISSION_SECONDS - timeLeft) / MISSION_SECONDS) * 8));
+}
+
+function showMonsterResult(type, points = 0) {
+  const monster = $("scoreMonster");
+  if (!monster) return;
+  const isSuccess = type === "success";
+  const stage = currentMonsterStage();
+  monster.classList.remove("waiting", "success", "failure", "timeout");
+  monster.classList.add(isSuccess ? "success" : "failure");
+  if (timeLeft === 0) monster.classList.add("timeout");
+  setMonsterAnimation(`assets/monster/monster-${isSuccess ? "win" : "lose"}-${stage}.gif`);
+  $("monsterStatus").textContent = isSuccess
+    ? (points > 0 ? `COOKIE SAVED · +${points}` : "COOKIE GONE · 0 POINTS")
+    : "COOKIE DROPPED · 0 POINTS";
 }
 
 function startMissionTimer() {
@@ -547,14 +566,18 @@ function startMissionTimer() {
     timeLeft = 0;
     return;
   }
-  timeLeft = 30;
+  timeLeft = MISSION_SECONDS;
   $("timerStat").textContent = `${timeLeft}s`;
   $("timerStat").classList.remove("timer-low");
   timerId = setInterval(() => {
     timeLeft = Math.max(0, timeLeft - 1);
     $("timerStat").textContent = `${timeLeft}s`;
-    $("timerStat").classList.toggle("timer-low", timeLeft <= 10);
-    if (timeLeft === 0) clearInterval(timerId);
+    $("timerStat").classList.toggle("timer-low", timeLeft <= 3);
+    $("monsterStatus").textContent = timeLeft === 0 ? "COOKIE GONE · ANSWER NOW" : `COOKIE TIMER · ${timeLeft}s`;
+    if (timeLeft === 0) {
+      clearInterval(timerId);
+      setMonsterAnimation("assets/monster/monster-eating-complete.gif");
+    }
   }, 1000);
 }
 
@@ -668,6 +691,7 @@ function renderMission() {
   $("toolName").textContent = m.tool;
   $("toolPayload").textContent = m.payload;
   $("feedback").className = "feedback hidden";
+  resetMonster();
   document.querySelectorAll(".decision").forEach(b => {
     b.disabled = false;
     b.classList.remove("selected", "correct-answer");
@@ -684,6 +708,7 @@ document.querySelectorAll(".decision").forEach(btn => {
     const choice = btn.dataset.decision;
     const m = activeMissions[current];
     const isCorrect = choice === m.answer;
+    const timedOut = !isPracticeMode && timeLeft === 0;
 
     document.querySelectorAll(".decision").forEach(b => b.disabled = true);
     btn.classList.add("selected");
@@ -695,18 +720,25 @@ document.querySelectorAll(".decision").forEach(btn => {
         $("feedbackTitle").textContent = "CORRECT DECISION";
         $("pointsEarned").textContent = "NICE CATCH";
       } else {
-        const speedPoints = timeLeft * 10;
-        const streakBonus = streak * 15;
-        earned = speedPoints + streakBonus;
-        score += earned;
-        streak += 1;
-        bestStreak = Math.max(bestStreak, streak);
-        $("feedbackTitle").textContent = "CORRECT DECISION";
-        $("pointsEarned").textContent = `+${earned} · ${speedPoints} SPEED + ${streakBonus} STREAK`;
-        feedMonster(earned);
+        if (timedOut) {
+          streak = 0;
+          $("feedbackTitle").textContent = "CORRECT — BUT TIME'S UP";
+          $("pointsEarned").textContent = "+0 · ANSWER BEFORE 0s TO SCORE";
+          showMonsterResult("success", 0);
+        } else {
+          const speedPoints = timeLeft * 10;
+          const streakBonus = streak * 15;
+          earned = speedPoints + streakBonus;
+          score += earned;
+          streak += 1;
+          bestStreak = Math.max(bestStreak, streak);
+          $("feedbackTitle").textContent = "CORRECT DECISION";
+          $("pointsEarned").textContent = `+${earned} · ${speedPoints} SPEED + ${streakBonus} STREAK`;
+          showMonsterResult("success", earned);
+        }
       }
       $("feedback").className = "feedback correct";
-      playCorrectSound();
+      if (timedOut) playWrongSound(); else playCorrectSound();
       showReaction(true, earned, isPracticeMode);
     } else {
       streak = 0;
@@ -715,13 +747,15 @@ document.querySelectorAll(".decision").forEach(btn => {
       $("feedback").className = "feedback incorrect";
       document.querySelector(`[data-decision="${m.answer}"]`).classList.add("correct-answer");
       playWrongSound();
+      if (!isPracticeMode) showMonsterResult("failure");
       showReaction(false, 0, isPracticeMode);
     }
     $("feedbackText").textContent = m.explanation;
     $("policyReason").textContent = m.policy;
     updateStats();
     $("nextBtn").innerHTML = `NEXT ${isPracticeMode ? "MISSION" : "NOW"} <span>→</span>`;
-    advanceTimer = setTimeout(advanceMission, isPracticeMode ? 2000 : (isCorrect ? 1450 : 1750));
+    const resultDelay = isPracticeMode ? 2000 : 2200;
+    advanceTimer = setTimeout(advanceMission, resultDelay);
   });
 });
 
