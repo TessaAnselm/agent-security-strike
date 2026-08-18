@@ -431,6 +431,7 @@ let sfxContext = null;
 let advanceTimer = null;
 let advancing = false;
 let isPracticeMode = false;
+let monsterChompTimer = null;
 const LEADERBOARD_TTL_MS = 24 * 60 * 60 * 1000;
 const PRACTICE_MISSION_COUNT = 3;
 
@@ -519,7 +520,25 @@ function updateStats() {
   $("streakStat").textContent = streak;
   if ($("gameScore")) $("gameScore").textContent = score;
   const maxScore = (activeMissions.length * 300) + (15 * activeMissions.length * (activeMissions.length - 1) / 2);
-  if ($("scoreMeter")) $("scoreMeter").style.width = `${Math.min(100, (score / maxScore) * 100)}%`;
+  const scorePct = Math.min(1, score / maxScore);
+  if ($("scoreMeter")) $("scoreMeter").style.width = `${scorePct * 100}%`;
+  if ($("scoreMonster")) $("scoreMonster").style.transform = `scale(${0.8 + scorePct * 0.7})`;
+}
+
+function feedMonster(points) {
+  const monster = $("scoreMonster");
+  if (!monster) return;
+  const svg = monster.querySelector(".monster-svg");
+  const cookie = monster.querySelector(".monster-cookie");
+  $("cookiePoints").textContent = `+${points}`;
+  cookie.classList.remove("show");
+  void cookie.offsetWidth;
+  cookie.classList.add("show");
+  clearTimeout(monsterChompTimer);
+  svg.classList.remove("chomp");
+  void svg.offsetWidth;
+  svg.classList.add("chomp");
+  monsterChompTimer = setTimeout(() => svg.classList.remove("chomp"), 480);
 }
 
 function startMissionTimer() {
@@ -570,20 +589,13 @@ function getLeaderboard() {
   }
 }
 
-function saveAndRenderLeaderboard() {
-  const entries = getLeaderboard();
-  entries.push({ handle: playerHandle, score, time: completionSeconds, date: Date.now() });
-  entries.sort((a, b) => b.score - a.score || a.time - b.time);
-  const top = entries.slice(0, 5);
-  try { localStorage.setItem("agentSecurityLeaderboard", JSON.stringify(top)); } catch {}
+function renderLeaderboardRows(entries, highlightEntry) {
   const list = $("leaderboardList");
   list.replaceChildren();
-  top.forEach((entry, index) => {
+  entries.forEach((entry, index) => {
     const row = document.createElement("div");
     row.className = "leaderboard-row";
-    if (entry.handle === playerHandle && entry.score === score && entry.time === completionSeconds) {
-      row.classList.add("is-player");
-    }
+    if (entry === highlightEntry) row.classList.add("is-player");
 
     const rank = document.createElement("span");
     rank.className = "rank";
@@ -601,6 +613,21 @@ function saveAndRenderLeaderboard() {
     row.append(rank, handle, points, elapsed);
     list.appendChild(row);
   });
+}
+
+function previewLeaderboard() {
+  renderLeaderboardRows(getLeaderboard().slice(0, 5), null);
+}
+
+function saveScoreToLeaderboard(handle) {
+  playerHandle = handle;
+  const entries = getLeaderboard();
+  const newEntry = { handle, score, time: completionSeconds, date: Date.now() };
+  entries.push(newEntry);
+  entries.sort((a, b) => b.score - a.score || a.time - b.time);
+  const top = entries.slice(0, 5);
+  try { localStorage.setItem("agentSecurityLeaderboard", JSON.stringify(top)); } catch {}
+  renderLeaderboardRows(top, newEntry);
 }
 
 function showReaction(isCorrect, points, practice = false) {
@@ -676,6 +703,7 @@ document.querySelectorAll(".decision").forEach(btn => {
         bestStreak = Math.max(bestStreak, streak);
         $("feedbackTitle").textContent = "CORRECT DECISION";
         $("pointsEarned").textContent = `+${earned} · ${speedPoints} SPEED + ${streakBonus} STREAK`;
+        feedMonster(earned);
       }
       $("feedback").className = "feedback correct";
       playCorrectSound();
@@ -701,6 +729,7 @@ function enterGameMode(practice) {
   isPracticeMode = practice;
   $("topStats").classList.toggle("practice-mode", practice);
   $("scoreRibbon").classList.toggle("hidden", practice);
+  $("monsterStage").classList.toggle("hidden", practice);
   $("practiceRibbon").classList.toggle("hidden", !practice);
   current = 0; score = 0; streak = 0; bestStreak = 0; correct = 0;
   if (practice) {
@@ -719,25 +748,9 @@ function enterGameMode(practice) {
   renderMission();
 }
 
-$("startBtn").addEventListener("click", () => {
-  const handle = $("handleInput").value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "");
-  if (handle.length < 2) {
-    $("handleError").textContent = "Enter at least 2 letters or numbers.";
-    $("handleInput").focus();
-    return;
-  }
-  playerHandle = handle;
-  $("handleInput").value = handle;
-  $("handleError").textContent = "";
-  enterGameMode(false);
-});
+$("startBtn").addEventListener("click", () => enterGameMode(false));
 
-$("practiceBtn").addEventListener("click", () => {
-  const handle = $("handleInput").value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "");
-  playerHandle = handle.length >= 2 ? handle : "PRACTICE";
-  $("handleError").textContent = "";
-  enterGameMode(true);
-});
+$("practiceBtn").addEventListener("click", () => enterGameMode(true));
 
 $("musicToggle").addEventListener("click", () => void setMusic(!musicOn));
 
@@ -748,6 +761,14 @@ function advanceMission() {
   if (current < activeMissions.length - 1) {
     current++;
     renderMission();
+  } else if (isPracticeMode) {
+    clearInterval(timerId);
+    current = 0; score = 0; streak = 0; bestStreak = 0; correct = 0;
+    isPracticeMode = false;
+    $("topStats").classList.remove("practice-mode");
+    $("timerStat").textContent = "--";
+    updateStats();
+    showScreen("introScreen");
   } else {
     clearInterval(timerId);
     completionSeconds = Math.max(1, Math.round((Date.now() - gameStartedAt) / 1000));
@@ -789,11 +810,7 @@ $("runSimBtn").addEventListener("click", async () => {
 $("finishBtn").addEventListener("click", () => {
   const pct = correct / activeMissions.length;
   let grade, headline, copy;
-  if (isPracticeMode) {
-    grade = "✓";
-    headline = "Practice run complete.";
-    copy = `You reviewed ${correct}/${activeMissions.length} checkpoints correctly. Replay in Practice & Learn any time, or try the Timed Challenge to put your instincts to the test.`;
-  } else if (pct === 1) {
+  if (pct === 1) {
     grade = "A+";
     headline = "Agentic security champion.";
     copy = "You caught authorization failures and OWASP agentic skill risks across the full chain. Your speed bonus helped secure your leaderboard position.";
@@ -811,20 +828,34 @@ $("finishBtn").addEventListener("click", () => {
     copy = "Try again and watch for malicious packages, compromised dependencies, excessive permissions, untrusted instructions, and weak isolation.";
   }
   $("grade").textContent = grade;
-  $("resultEyebrow").textContent = isPracticeMode ? "PRACTICE COMPLETE" : "CHALLENGE COMPLETE";
   $("resultHeadline").textContent = headline;
   $("resultCopy").textContent = copy;
   $("finalScore").textContent = score;
   $("correctCount").textContent = `${correct}/${activeMissions.length}`;
   $("bestStreak").textContent = bestStreak;
   $("finalTime").textContent = formatTime(completionSeconds);
-  $("resultCard").classList.toggle("practice-mode", isPracticeMode);
-  if (isPracticeMode) {
-    $("leaderboardList").replaceChildren();
-  } else {
-    saveAndRenderLeaderboard();
-  }
+  $("resultHandleInput").value = "";
+  $("resultHandleError").textContent = "";
+  $("saveScoreRow").classList.remove("hidden");
+  previewLeaderboard();
   showScreen("resultScreen");
+});
+
+function trySaveScore() {
+  const handle = $("resultHandleInput").value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, "");
+  if (handle.length < 2) {
+    $("resultHandleError").textContent = "Enter at least 2 letters or numbers.";
+    $("resultHandleInput").focus();
+    return;
+  }
+  $("resultHandleError").textContent = "";
+  $("saveScoreRow").classList.add("hidden");
+  saveScoreToLeaderboard(handle);
+}
+
+$("saveScoreBtn").addEventListener("click", trySaveScore);
+$("resultHandleInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") trySaveScore();
 });
 
 $("restartBtn").addEventListener("click", () => {

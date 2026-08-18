@@ -48,16 +48,11 @@
             <div class="concept-card"><span class="step-num">04</span><b>Constraints</b><p>When and under what conditions?</p></div>
             <div class="concept-card"><span class="step-num">05</span><b>Request</b><p>What is it asking to do right now?</p></div>
           </div>
-          <div class="player-entry">
-            <label for="handleInput">PLAYER HANDLE</label>
-            <input id="handleInput" maxlength="16" autocomplete="nickname" placeholder="e.g. CYBERFOX" />
-            <small id="handleError"></small>
-          </div>
           <div class="cta-row">
             <button id="startBtn" class="primary">START TIMED CHALLENGE <span>→</span></button>
             <button id="practiceBtn" class="secondary" type="button">PRACTICE &amp; LEARN <span>→</span></button>
           </div>
-          <p class="mode-note">Practice &amp; Learn removes the clock and scoring, gives you 3 random checkpoints, and waits for you to hit <b>NEXT</b> before moving on — a handle is optional.</p>
+          <p class="mode-note">Practice &amp; Learn removes the clock and scoring and gives you 3 random checkpoints. After each answer the explanation shows for a couple of seconds before the next one, then you're back here. In the Timed Challenge you'll pick a handle at the end, to save your score to the leaderboard.</p>
         </div>
         <div class="terminal-card">
           <div class="terminal-head"><span></span><span></span><span></span><b>checkpoint.log</b></div>
@@ -129,6 +124,54 @@ scope present  = false
           </div>
 
           <div class="question">What should the checkpoint do?</div>
+          <div class="monster-stage" id="monsterStage" aria-hidden="true">
+            <div class="score-monster" id="scoreMonster">
+              <div class="monster-cookie"><span id="cookiePoints"></span></div>
+              <svg class="monster-svg" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="monsterRainbow" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ff5364"/>
+                    <stop offset="25%" stop-color="#ffc857"/>
+                    <stop offset="50%" stop-color="#b8ff2c"/>
+                    <stop offset="75%" stop-color="#36e5ff"/>
+                    <stop offset="100%" stop-color="#b06cff"/>
+                  </linearGradient>
+                </defs>
+                <ellipse cx="72" cy="200" rx="16" ry="10" fill="url(#monsterRainbow)"/>
+                <ellipse cx="128" cy="200" rx="16" ry="10" fill="url(#monsterRainbow)"/>
+                <rect x="60" y="168" width="24" height="34" rx="12" fill="url(#monsterRainbow)"/>
+                <rect x="116" y="168" width="24" height="34" rx="12" fill="url(#monsterRainbow)"/>
+                <path d="M52 112 Q20 132 28 170" stroke="url(#monsterRainbow)" stroke-width="20" stroke-linecap="round" fill="none"/>
+                <ellipse cx="100" cy="112" rx="72" ry="78" fill="url(#monsterRainbow)"/>
+                <path d="M150 118 Q188 96 178 58" stroke="url(#monsterRainbow)" stroke-width="20" stroke-linecap="round" fill="none"/>
+                <path d="M78 46 Q68 12 90 24 Q88 40 78 46Z" fill="#ffcf4d"/>
+                <path d="M122 46 Q132 12 110 24 Q112 40 122 46Z" fill="#ffcf4d"/>
+                <circle cx="58" cy="92" r="4" fill="#ff9d3d" opacity=".85"/>
+                <circle cx="142" cy="148" r="4" fill="#ff9d3d" opacity=".85"/>
+                <circle cx="88" cy="162" r="3" fill="#ff9d3d" opacity=".85"/>
+                <circle cx="134" cy="78" r="3" fill="#ff9d3d" opacity=".85"/>
+                <circle cx="76" cy="98" r="20" fill="#fff"/>
+                <circle cx="76" cy="100" r="11" fill="#e8b84b"/>
+                <circle cx="78" cy="102" r="6" fill="#1a1206"/>
+                <circle cx="73" cy="96" r="2.4" fill="#fff"/>
+                <circle cx="126" cy="102" r="16" fill="#fff"/>
+                <circle cx="126" cy="103" r="9" fill="#e8b84b"/>
+                <circle cx="128" cy="105" r="5" fill="#1a1206"/>
+                <circle cx="123" cy="99" r="2" fill="#fff"/>
+                <path d="M62 130 Q100 180 138 130 Q100 152 62 130Z" fill="#3c1414"/>
+                <path d="M70 132 L78 144 L86 132Z" fill="#fff"/>
+                <path d="M92 138 L100 150 L108 138Z" fill="#fff"/>
+                <path d="M114 132 L122 144 L130 132Z" fill="#fff"/>
+                <g transform="translate(178,50)">
+                  <circle r="15" fill="#d9a066"/>
+                  <circle cx="-5" cy="-5" r="2.4" fill="#6b4321"/>
+                  <circle cx="5" cy="-3" r="2" fill="#6b4321"/>
+                  <circle cx="-2" cy="6" r="2.2" fill="#6b4321"/>
+                  <circle cx="6" cy="5" r="1.7" fill="#6b4321"/>
+                </g>
+              </svg>
+            </div>
+          </div>
           <div class="actions">
             <button class="decision allow" data-decision="allow"><span>✓</span> ALLOW</button>
             <button class="decision challenge" data-decision="challenge"><span>?</span> ASK FOR CONSENT</button>
@@ -203,21 +246,26 @@ scope present  = false
     </section>
 
     <section id="resultScreen" class="screen">
-      <div class="result-card" id="resultCard">
-        <div class="eyebrow" id="resultEyebrow">CHALLENGE COMPLETE</div>
+      <div class="result-card">
+        <div class="eyebrow">CHALLENGE COMPLETE</div>
         <div id="gradeRing" class="grade-ring"><span id="grade">A</span></div>
         <h2 id="resultHeadline"></h2>
         <p id="resultCopy"></p>
 
         <div class="result-stats">
-          <div class="timed-stat"><strong id="finalScore"></strong><span>POINTS</span></div>
+          <div><strong id="finalScore"></strong><span>POINTS</span></div>
           <div><strong id="correctCount"></strong><span>CORRECT</span></div>
-          <div class="timed-stat"><strong id="bestStreak"></strong><span>BEST STREAK</span></div>
+          <div><strong id="bestStreak"></strong><span>BEST STREAK</span></div>
           <div><strong id="finalTime"></strong><span>TIME</span></div>
         </div>
 
-        <div class="leaderboard timed-stat" id="leaderboardPanel">
+        <div class="leaderboard">
           <div class="leaderboard-head"><div><div class="eyebrow">LOCAL RANKINGS · LAST 24 HOURS</div><h3>Security Leaderboard</h3></div><span>TOP 5</span></div>
+          <div class="save-score" id="saveScoreRow">
+            <input id="resultHandleInput" maxlength="16" autocomplete="nickname" placeholder="ENTER YOUR HANDLE" />
+            <button id="saveScoreBtn" class="primary small" type="button">SAVE SCORE <span>→</span></button>
+          </div>
+          <small id="resultHandleError"></small>
           <div id="leaderboardList" class="leaderboard-list"></div>
         </div>
 
