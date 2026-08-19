@@ -33,7 +33,7 @@
     <section id="introScreen" class="screen active">
       <div class="intro-monster" aria-label="Cookie monster eating a complete cookie">
         <div class="intro-monster-frame">
-          <img src="assets/monster-badge.gif" alt="Pink monster happily finishing a cookie" />
+          <img src="assets/monster/monster_chewing_cookie_with_hearts_and_stars.gif" alt="Pink monster happily chewing a cookie with hearts and stars" />
         </div>
         <span>SECURITY SNACK IN PROGRESS</span>
       </div>
@@ -58,7 +58,7 @@
             <button id="startBtn" class="primary">START TIMED CHALLENGE <span>→</span></button>
             <button id="practiceBtn" class="secondary" type="button">PRACTICE &amp; LEARN <span>→</span></button>
           </div>
-          <p class="mode-note">Practice &amp; Learn removes the clock and scoring and gives you 3 random checkpoints. After each answer the explanation shows for a couple of seconds before the next one, then you're back here. In the Timed Challenge you'll pick a handle at the end, to save your score to the leaderboard.</p>
+          <p class="mode-note">Practice &amp; Learn removes the clock and scoring and gives you 3 random checkpoints. After each answer, read the explanation and click NEXT whenever you're ready, then you're back here. In the Timed Challenge you'll pick a handle at the end, to save your score to the leaderboard.</p>
         </div>
         <div class="terminal-card">
           <div class="terminal-head"><span></span><span></span><span></span><b>checkpoint.log</b></div>
@@ -97,7 +97,7 @@ scope present  = false
         <strong><span id="gameScore">0</span> PTS</strong>
         <div class="score-meter"><div id="scoreMeter"></div></div>
       </div>
-      <div class="practice-ribbon hidden" id="practiceRibbon">STUDY MODE — read each explanation, then click NEXT whenever you're ready.</div>
+      <div class="practice-ribbon hidden" id="practiceRibbon">STUDY MODE — pick ALLOW, ASK FOR CONSENT, or BLOCK below. Read the explanation to the answer. When ready to move on, click NEXT MISSION.</div>
 
       <div class="game-grid">
         <aside class="identity-panel panel">
@@ -136,7 +136,7 @@ scope present  = false
           <div class="decision-row">
             <div class="monster-stage" id="monsterStage" aria-hidden="true">
               <div class="score-monster" id="scoreMonster">
-                <img id="monsterAnimation" class="monster-animation" src="assets/monster/monster-eating.gif" alt="" />
+                <img id="monsterAnimation" class="monster-animation" src="assets/monster/monster_chewing_cookie_with_hearts_and_stars.gif" alt="" />
                 <span id="monsterStatus" class="monster-status">BEAT THE CLOCK</span>
               </div>
             </div>

@@ -29,7 +29,7 @@ See [SCENARIO_GUIDE.md](SCENARIO_GUIDE.md) for a plain-language explanation of e
 From this folder:
 
 ```bash
-4242
+python3 -m http.server 8000
 ```
 
 Then open `http://localhost:8000`. No install, API key, backend, or database is required. The soundtrack starts after the player begins the challenge and can be muted from the header.
@@ -38,35 +38,7 @@ Music: “Typography” by Infraction, provided through [Uppbeat](https://uppbea
 
 Correct and incorrect answer effects are generated locally with the browser Web Audio API and do not require additional sound files.
 
-The opening screen includes the full-cookie eating monster GIF. Timed questions use generated GIF sequences in `assets/monster/` for the countdown and time-matched win and lose animations.
-
-## Publish with GitHub and Netlify
-
-This repository is configured for a no-build Netlify deployment through `netlify.toml`. Netlify publishes the repository root and applies production security and caching headers automatically.
-
-### 1. Push to GitHub
-
-Create an empty GitHub repository without adding a generated README or `.gitignore`, then run:
-
-```bash
-git add .
-git commit -m "Initial Agent Security Strike release"
-git branch -M main
-git remote add origin https://github.com/YOUR-USERNAME/YOUR-REPOSITORY.git
-git push -u origin main
-```
-
-Replace the example repository URL with the URL GitHub provides. Do not commit account tokens or other credentials.
-
-### 2. Connect Netlify
-
-1. In Netlify, choose **Add new project** and **Import an existing project**.
-2. Select GitHub and authorize access to the repository.
-3. Select this repository.
-4. Netlify should read `netlify.toml` automatically. The build command stays empty and the publish directory is `.`.
-5. Deploy the site.
-
-Later pushes to `main` will trigger new Netlify deploys automatically. The current leaderboard remains local to each player's browser; a trusted shared competition leaderboard requires server-side scoring and storage.
+The opening screen, Practice mode, and Timed Challenge all use `monster_chewing_cookie_with_hearts_and_stars.gif`. Result status text, colors, sounds, and scoring communicate correct, incorrect, and time-expired outcomes while the same monster animation remains visible.
 
 ## Deployment and competition security
 
@@ -111,7 +83,7 @@ Play through 15 randomly drawn questions (6 ALLOW, 6 BLOCK, 3 ASK FOR CONSENT) i
 
 Each mission has a 10-second clock. Correct answers earn 10 points for every second remaining, so answering immediately is worth up to 100 points. Consecutive correct answers also earn an increasing 15-point streak bonus. A correct answer after the timer reaches zero earns no speed or streak points. The five best runs are stored in the browser's local storage and ranked by score, then completion time. Each result automatically expires 24 hours after it was recorded.
 
-In timed mode, the cookie monster appears beside every question in a 10-second eating animation. When the player answers correctly, the game plays a matching win GIF based on how much cookie remained. An incorrect answer plays the matching lose GIF. Internal progress labels are hidden from players. At zero seconds the cookie is gone, and even a correct decision earns no speed or streak points. The result animation remains visible briefly before the next question; players can still choose **NEXT NOW** to skip ahead.
+In timed mode, the same hearts-and-stars cookie monster appears beside every question throughout the 10-second countdown and remains visible after the answer. Correct, incorrect, and expired-time outcomes are communicated through the status message, border color, sound, and points. At zero seconds, even a correct decision earns no speed or streak points. The result remains visible briefly before the next question; players can still choose **NEXT NOW** to skip ahead.
 
 ## OWASP coverage
 

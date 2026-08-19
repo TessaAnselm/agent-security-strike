@@ -598,6 +598,7 @@ let advancing = false;
 let isPracticeMode = false;
 const LEADERBOARD_TTL_MS = 24 * 60 * 60 * 1000;
 const PRACTICE_MISSION_COUNT = 3;
+const MONSTER_GIF = "assets/monster/monster_chewing_cookie_with_hearts_and_stars.gif";
 
 const $ = (id) => document.getElementById(id);
 const screens = ["introScreen","gameScreen","simulationScreen","resultScreen"];
@@ -705,7 +706,7 @@ function resetMonster() {
   if (!monster) return;
   monster.classList.remove("success", "failure", "timeout");
   monster.classList.add("waiting");
-  setMonsterAnimation("assets/monster/monster-eating.gif");
+  setMonsterAnimation(MONSTER_GIF);
 }
 
 function updateMonsterCountdown() {
@@ -723,21 +724,15 @@ function setMonsterAnimation(source) {
   animation.src = source;
 }
 
-function currentMonsterStage() {
-  if (isPracticeMode) return 0;
-  return Math.min(7, Math.floor(((MISSION_SECONDS - timeLeft) / MISSION_SECONDS) * 8));
-}
-
 function showMonsterResult(type, points = 0) {
   const monster = $("scoreMonster");
   if (!monster) return;
   $("missionBrief").classList.remove("brief-pulse");
   const isSuccess = type === "success";
-  const stage = currentMonsterStage();
   monster.classList.remove("waiting", "success", "failure", "timeout");
   monster.classList.add(isSuccess ? "success" : "failure");
   if (!isPracticeMode && timeLeft === 0) monster.classList.add("timeout");
-  setMonsterAnimation(`assets/monster/monster-${isSuccess ? "win" : "lose"}-${stage}.gif`);
+  setMonsterAnimation(MONSTER_GIF);
   if (isPracticeMode) {
     $("monsterStatus").textContent = isSuccess ? "NICE CATCH!" : "STUDY THE REASON BELOW";
   } else {
@@ -765,7 +760,7 @@ function startMissionTimer() {
     updateMonsterCountdown();
     if (timeLeft === 0) {
       clearInterval(timerId);
-      setMonsterAnimation("assets/monster/monster-eating-complete.gif");
+      setMonsterAnimation(MONSTER_GIF);
       $("missionBrief").classList.remove("brief-pulse");
     }
   }, 1000);
@@ -862,6 +857,8 @@ function renderMission() {
   clearTimeout(advanceTimer);
   advancing = false;
   answered = false;
+  $("practiceRibbon").classList.remove("answer-ready");
+  $("nextBtn").classList.remove("practice-next-ready");
   const m = activeMissions[current];
   $("progressBar").style.width = `${(current / activeMissions.length) * 100}%`;
   $("missionLabel").textContent = `${isPracticeMode ? "STUDY" : "MISSION"} ${String(current+1).padStart(2,"0")}${m.owasp ? `  •  OWASP ${m.owasp}` : ""}`;
@@ -948,8 +945,14 @@ document.querySelectorAll(".decision").forEach(btn => {
     $("policyReason").textContent = m.policy;
     updateStats();
     $("nextBtn").innerHTML = `NEXT ${isPracticeMode ? "MISSION" : "NOW"} <span>→</span>`;
-    const resultDelay = isPracticeMode ? 2000 : 2200;
-    advanceTimer = setTimeout(advanceMission, resultDelay);
+    if (isPracticeMode) {
+      $("practiceRibbon").classList.remove("answer-ready");
+      void $("practiceRibbon").offsetWidth;
+      $("practiceRibbon").classList.add("answer-ready");
+      $("nextBtn").classList.add("practice-next-ready");
+    }
+    $("feedback").scrollIntoView({ behavior: "smooth", block: "end" });
+    if (!isPracticeMode) advanceTimer = setTimeout(advanceMission, 2200);
   });
 });
 
