@@ -2,6 +2,10 @@
 
 A dependency-free, timed browser game inspired by the [OWASP Agentic Skills Top 10](https://owasp.org/www-project-agentic-skills-top-10/). It teaches players to recognize security failures across agent permissions, skill installation, dependencies, external instructions, isolation, and scanning.
 
+## Hosted version
+
+Play the game online at [wondrous-beijinho-30a2f2.netlify.app](https://wondrous-beijinho-30a2f2.netlify.app/).
+
 ## What is this game?
 
 This is a timed cybersecurity game about AI agents.
@@ -37,8 +41,6 @@ Then open `http://localhost:8000`. No install, API key, backend, or database is 
 Music: “Typography” by Infraction, provided through [Uppbeat](https://uppbeat.io/t/infraction/typography), license code `FZUFFQUJLKGZQUEH`.
 
 Correct and incorrect answer effects are generated locally with the browser Web Audio API and do not require additional sound files.
-
-The opening screen, Practice mode, and Timed Challenge all use `monster_chewing_cookie_with_hearts_and_stars.gif`. Result status text, colors, sounds, and scoring communicate correct, incorrect, and time-expired outcomes while the same monster animation remains visible.
 
 ## Deployment and competition security
 
