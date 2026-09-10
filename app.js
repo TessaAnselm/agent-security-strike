@@ -38,9 +38,9 @@ const missions = [
   "subject": "Re: Interview",
   "body": "Tuesday works for me."
 }`,
-    answer: "challenge",
-    explanation: "The agent does not have email:send. Because the action may be legitimate but carries user intent, the safest next step is to ask the human for explicit consent rather than silently expanding authority.",
-    policy: "required_scope=email:send → absent; human approval can create/extend delegation"
+    answer: "block",
+    explanation: "The agent holds email:list, email:read, and email:label — not email:send. Deciding on its own that a reply would be helpful is the agent expanding its own authority beyond what was delegated. Sending mail is an irreversible action taken in the principal's name, so the out-of-scope tool call is denied. The principal can grant email:send and re-issue the request if they want replies handled for them.",
+    policy: "required_scope=email:send → absent; out-of-scope tool call → deny"
   },
   {
     title: "Expired authority",
@@ -126,7 +126,7 @@ const missions = [
 }`,
     answer: "challenge",
     explanation: "The agent may prepare the workflow, but the delegation explicitly excludes binding acceptance. Route the decision to the human for consent.",
-    policy: "constraint=binding_action_requires_consent → challenge"
+    policy: "constraint=binding_action_requires_consent → ask for consent"
   },
   {
     title: "OAuth is not the whole story",
@@ -586,14 +586,15 @@ let bestStreak = 0;
 let correct = 0;
 let answered = false;
 let playerHandle = "ANON";
-const MISSION_SECONDS = 10;
+const MISSION_SECONDS = 15;
+const MIN_CORRECT_POINTS = 10;
+const ANSWER_LABELS = { allow: "ALLOW", challenge: "ASK FOR CONSENT", block: "BLOCK" };
 let timeLeft = MISSION_SECONDS;
 let timerId = null;
 let gameStartedAt = 0;
 let completionSeconds = 0;
 let musicOn = false;
 let sfxContext = null;
-let advanceTimer = null;
 let advancing = false;
 let isPracticeMode = false;
 const LEADERBOARD_TTL_MS = 24 * 60 * 60 * 1000;
@@ -710,9 +711,9 @@ function resetMonster() {
 }
 
 function updateMonsterCountdown() {
-  const pts = timeLeft * 10;
+  const pts = Math.max(MIN_CORRECT_POINTS, timeLeft * 10);
   $("monsterStatus").textContent = timeLeft === 0
-    ? "COOKIE GONE · 0 PTS"
+    ? `COOKIE GONE · ${MIN_CORRECT_POINTS} PTS IF CORRECT`
     : `WORTH ${pts} PTS · ${timeLeft}s LEFT`;
 }
 
@@ -756,7 +757,7 @@ function startMissionTimer() {
   timerId = setInterval(() => {
     timeLeft = Math.max(0, timeLeft - 1);
     $("timerStat").textContent = `${timeLeft}s`;
-    $("timerStat").classList.toggle("timer-low", timeLeft <= 3);
+    $("timerStat").classList.toggle("timer-low", timeLeft <= 5);
     updateMonsterCountdown();
     if (timeLeft === 0) {
       clearInterval(timerId);
@@ -854,7 +855,6 @@ function showReaction(isCorrect, points, practice = false) {
   }, 1250);
 }
 function renderMission() {
-  clearTimeout(advanceTimer);
   advancing = false;
   answered = false;
   $("practiceRibbon").classList.remove("answer-ready");
@@ -911,29 +911,22 @@ document.querySelectorAll(".decision").forEach(btn => {
         $("pointsEarned").textContent = "NICE CATCH";
         showMonsterResult("success", 0);
       } else {
-        if (timedOut) {
-          streak = 0;
-          $("feedbackTitle").textContent = "CORRECT — BUT TIME'S UP";
-          $("pointsEarned").textContent = "+0 · ANSWER BEFORE 0s TO SCORE";
-          showMonsterResult("success", 0);
-        } else {
-          const speedPoints = timeLeft * 10;
-          const streakBonus = streak * 15;
-          earned = speedPoints + streakBonus;
-          score += earned;
-          streak += 1;
-          bestStreak = Math.max(bestStreak, streak);
-          $("feedbackTitle").textContent = "CORRECT DECISION";
-          $("pointsEarned").textContent = `+${earned} · ${speedPoints} SPEED + ${streakBonus} STREAK`;
-          showMonsterResult("success", earned);
-        }
+        const speedPoints = Math.max(MIN_CORRECT_POINTS, timeLeft * 10);
+        const streakBonus = streak * 15;
+        earned = speedPoints + streakBonus;
+        score += earned;
+        streak += 1;
+        bestStreak = Math.max(bestStreak, streak);
+        $("feedbackTitle").textContent = timedOut ? "CORRECT — CLOCK RAN OUT" : "CORRECT DECISION";
+        $("pointsEarned").textContent = `+${earned} · ${speedPoints} SPEED + ${streakBonus} STREAK`;
+        showMonsterResult("success", earned);
       }
       $("feedback").className = "feedback correct";
-      if (timedOut) playWrongSound(); else playCorrectSound();
+      playCorrectSound();
       showReaction(true, earned, isPracticeMode);
     } else {
       streak = 0;
-      $("feedbackTitle").textContent = `NOT QUITE — ${m.answer.toUpperCase()} WAS THE RIGHT CALL`;
+      $("feedbackTitle").textContent = `NOT QUITE — ${ANSWER_LABELS[m.answer]} WAS THE RIGHT CALL`;
       $("pointsEarned").textContent = isPracticeMode ? "STUDY THE REASON BELOW" : "+0";
       $("feedback").className = "feedback incorrect";
       document.querySelector(`[data-decision="${m.answer}"]`).classList.add("correct-answer");
@@ -944,15 +937,14 @@ document.querySelectorAll(".decision").forEach(btn => {
     $("feedbackText").textContent = m.explanation;
     $("policyReason").textContent = m.policy;
     updateStats();
-    $("nextBtn").innerHTML = `NEXT ${isPracticeMode ? "MISSION" : "NOW"} <span>→</span>`;
+    $("nextBtn").innerHTML = `NEXT MISSION <span>→</span>`;
     if (isPracticeMode) {
       $("practiceRibbon").classList.remove("answer-ready");
       void $("practiceRibbon").offsetWidth;
       $("practiceRibbon").classList.add("answer-ready");
-      $("nextBtn").classList.add("practice-next-ready");
     }
+    $("nextBtn").classList.add("practice-next-ready");
     $("feedback").scrollIntoView({ behavior: "smooth", block: "end" });
-    if (!isPracticeMode) advanceTimer = setTimeout(advanceMission, 2200);
   });
 });
 
@@ -973,7 +965,31 @@ function enterGameMode(practice) {
   renderMission();
 }
 
-$("startBtn").addEventListener("click", () => enterGameMode(false));
+function setPracticeCheckModalOpen(open) {
+  $("practiceCheckModal").classList.toggle("hidden", !open);
+}
+
+$("startBtn").addEventListener("click", () => setPracticeCheckModalOpen(true));
+
+$("practiceCheckYes").addEventListener("click", () => {
+  setPracticeCheckModalOpen(false);
+  enterGameMode(false);
+});
+
+$("practiceCheckNo").addEventListener("click", () => {
+  setPracticeCheckModalOpen(false);
+  enterGameMode(true);
+});
+
+$("practiceCheckModal").addEventListener("click", (e) => {
+  if (e.target === $("practiceCheckModal")) setPracticeCheckModalOpen(false);
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !$("practiceCheckModal").classList.contains("hidden")) {
+    setPracticeCheckModalOpen(false);
+  }
+});
 
 $("practiceBtn").addEventListener("click", () => enterGameMode(true));
 
@@ -982,7 +998,6 @@ $("musicToggle").addEventListener("click", () => void setMusic(!musicOn));
 function advanceMission() {
   if (advancing) return;
   advancing = true;
-  clearTimeout(advanceTimer);
   if (current < activeMissions.length - 1) {
     current++;
     renderMission();
@@ -1085,7 +1100,6 @@ $("resultHandleInput").addEventListener("keydown", (e) => {
 
 $("restartBtn").addEventListener("click", () => {
   clearInterval(timerId);
-  clearTimeout(advanceTimer);
   current = 0; score = 0; streak = 0; bestStreak = 0; correct = 0;
   isPracticeMode = false;
   $("topStats").classList.remove("practice-mode");

@@ -14,9 +14,9 @@ A scheduling agent wants to read someone's calendar. It has permission to do tha
 
 An email agent can read and organize messages, but it wants to send a reply. Sending email was not included in its permissions.
 
-**Correct decision:** Ask for consent
+**Correct decision:** Block
 
-**Lesson:** An AI should ask before speaking or making decisions for someone.
+**Lesson:** An agent must not expand its own permissions to be helpful. If sending email was never granted, the agent does not send email — the person can grant that permission and ask again.
 
 ## 3. Expired authority
 

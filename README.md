@@ -18,7 +18,7 @@ For every question, the player sees what an AI agent wants to do and chooses one
 - **ASK FOR CONSENT** — a person or security reviewer should approve it first.
 - **BLOCK** — the action is dangerous or breaks a security rule.
 
-Players have 10 seconds for each question. Faster correct answers earn more points: an immediate answer can earn 100 speed points, while an answer with 5 seconds remaining earns 50. Correct answers in a row also build a streak bonus. Each Timed Challenge run draws 15 questions in a random order, guaranteed to include 6 ALLOW, 6 BLOCK, and 3 ASK FOR CONSENT scenarios, so no run skews too heavily toward one verdict. The best scores appear on a 24-hour local leaderboard.
+Players have 15 seconds for each question. Faster correct answers earn more points: an immediate answer can earn 150 speed points, while an answer with 5 seconds remaining earns 50. Correct answers in a row also build a streak bonus. Each Timed Challenge run draws 15 questions in a random order, guaranteed to include 6 ALLOW, 6 BLOCK, and 3 ASK FOR CONSENT scenarios, so no run skews too heavily toward one verdict. The best scores appear on a 24-hour local leaderboard.
 
 The scenarios teach players to recognize malicious AI extensions, compromised software updates, excessive permissions, hidden instructions, weak security sandboxes, and missing human oversight.
 
@@ -83,9 +83,9 @@ Play through 15 randomly drawn questions (6 ALLOW, 6 BLOCK, 3 ASK FOR CONSENT) i
 - **ASK FOR CONSENT** — explicit human review or approval is required.
 - **BLOCK** — the action violates delegation, provenance, scope, integrity, or runtime policy.
 
-Each mission has a 10-second clock. Correct answers earn 10 points for every second remaining, so answering immediately is worth up to 100 points. Consecutive correct answers also earn an increasing 15-point streak bonus. A correct answer after the timer reaches zero earns no speed or streak points. The five best runs are stored in the browser's local storage and ranked by score, then completion time. Each result automatically expires 24 hours after it was recorded.
+Each mission has a 15-second clock. Correct answers earn 10 points for every second remaining, so answering immediately is worth up to 150 points. Consecutive correct answers also earn an increasing 15-point streak bonus. A correct answer always scores: once the clock runs out the speed bonus is prorated down to a 10-point floor, and the streak bonus still applies. Only a wrong answer scores zero (and breaks the streak). The five best runs are stored in the browser's local storage and ranked by score, then completion time. Each result automatically expires 24 hours after it was recorded.
 
-In timed mode, the same hearts-and-stars cookie monster appears beside every question throughout the 10-second countdown and remains visible after the answer. Correct, incorrect, and expired-time outcomes are communicated through the status message, border color, sound, and points. At zero seconds, even a correct decision earns no speed or streak points. The result remains visible briefly before the next question; players can still choose **NEXT NOW** to skip ahead.
+In timed mode, the same hearts-and-stars cookie monster appears beside every question throughout the 15-second countdown and remains visible after the answer. Correct, incorrect, and expired-time outcomes are communicated through the status message, border color, sound, and points. At zero seconds a correct decision still earns the 10-point floor plus any streak bonus; only wrong answers score zero. After an answer the game does not advance on its own: the explanation and policy reason stay on screen until the player clicks **NEXT MISSION**. The per-question countdown only affects scoring and still stops the moment an answer is submitted.
 
 ## OWASP coverage
 

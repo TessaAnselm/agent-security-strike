@@ -349,3 +349,26 @@ footer a:hover { color:var(--cyan);border-color:var(--cyan); }
 @media (prefers-reduced-motion: reduce) {
   *, *:before, *:after { animation-duration:.01ms !important;animation-iteration-count:1 !important;scroll-behavior:auto !important; }
 }
+
+.modal-overlay {
+  position:fixed;inset:0;z-index:50;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  background:rgba(4,5,8,.78);
+  backdrop-filter:blur(4px);
+  animation:fade .2s ease;
+}
+.modal-card {
+  width:100%;max-width:460px;
+  border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(16,20,27,.98),rgba(10,14,19,.98));
+  box-shadow:0 30px 90px rgba(0,0,0,.5);
+  padding:26px 28px 28px;
+}
+.modal-card h3 { margin:10px 0 12px;font-size:21px;letter-spacing:-.4px; }
+.modal-card p { margin:0;color:var(--muted);font-size:13px;line-height:1.6; }
+.modal-actions { display:flex;flex-wrap:wrap;gap:10px;margin-top:22px; }
+.modal-actions button { flex:1 1 200px; }
+@media (max-width:640px) {
+  .modal-card { padding:20px; }
+}

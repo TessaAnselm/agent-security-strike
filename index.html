@@ -250,6 +250,18 @@ scope present  = false
     </section>
   </main>
 
+  <div id="practiceCheckModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="practiceCheckTitle">
+    <div class="modal-card">
+      <div class="eyebrow">BEFORE YOU START</div>
+      <h3 id="practiceCheckTitle">Have you run the practice session yet?</h3>
+      <p>The Timed Challenge runs the clock and scores every checkpoint. Practice &amp; Learn walks through 3 checkpoints untimed with explanations, so the identity → delegation → scope → constraints → request flow makes sense first.</p>
+      <div class="modal-actions">
+        <button id="practiceCheckYes" class="primary" type="button">YES, START TIMED CHALLENGE <span>→</span></button>
+        <button id="practiceCheckNo" class="secondary" type="button">NO, TAKE ME TO PRACTICE <span>→</span></button>
+      </div>
+    </div>
+  </div>
+
   <footer>
     <span>Agent Security Strike</span>
     <span>Timed educational prototype • Based on OWASP Agentic Skills Top 10 concepts</span>
